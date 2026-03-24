@@ -1,0 +1,433 @@
+/* RESET */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: "Segoe UI", sans-serif;
+}
+
+body {
+	background: #f5f1e8;
+	margin: 0;
+}
+
+/* LAYOUT */
+.app {
+	display: flex;
+	min-height: 100vh; /* instead of height: 100% */
+}
+
+html, body, #root {
+	height: 100%;
+	width: 100%;
+}
+
+.sidebar {
+	width: 220px;
+	background: #ffffff;
+	border-right: 1px solid #eee;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 20px;
+
+	/* animation */
+	transition: transform 0.3s ease;
+}
+
+/* 📱 MOBILE BEHAVIOR */
+@media (max-width: 768px) {
+	.sidebar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 100vh;
+		z-index: 1000;
+
+		transform: translateX(-100%); /* hidden */
+	}
+
+	.sidebar.open {
+		transform: translateX(0); /* show */
+	}
+}
+
+.sidebar h2 {
+	font-size: 16px;
+	margin-bottom: 20px;
+}
+
+.sidebar ul {
+	list-style: none;
+}
+
+.sidebar li {
+	padding: 10px;
+	border-radius: 8px;
+	margin-bottom: 5px;
+	cursor: pointer;
+	color: #555;
+}
+
+.sidebar li.active {
+	background: #4caf50;
+	color: white;
+}
+
+.sidebar li:hover {
+	background: #f0f0f0;
+}
+
+.close-btn {
+	background: none;
+	border: none;
+	font-size: 20px;
+	cursor: pointer;
+	margin-bottom: 10px;
+}
+
+/* TOPBAR */
+.topbar {
+	height: 60px;
+	background: white;
+	border-bottom: 1px solid #eee;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 20px;
+}
+
+.search {
+	background: #f0f0f0;
+	padding: 8px 15px;
+	border-radius: 20px;
+	width: 300px;
+	border: none;
+}
+
+/* MAIN CONTENT */
+.main {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+/* CONTENT AREA */
+.content {
+	padding: 20px;
+}
+
+/* CARDS */
+.cards {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 15px;
+	margin-bottom: 20px;
+}
+
+.card {
+	background: white;
+	padding: 15px;
+	border-radius: 12px;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.card h4 {
+	font-size: 13px;
+	color: #888;
+}
+
+.card h2 {
+	margin-top: 5px;
+	font-size: 20px;
+}
+
+/* BADGES */
+.badge {
+	font-size: 12px;
+	padding: 3px 8px;
+	border-radius: 10px;
+	margin-left: 5px;
+}
+
+.green {
+	background: #e6f7ec;
+	color: #2ecc71;
+}
+
+.red {
+	background: #fdecea;
+	color: #e74c3c;
+}
+
+/* GRID */
+.grid {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	gap: 15px;
+}
+
+/* BOX */
+.box {
+	background: white;
+	padding: 15px;
+	border-radius: 12px;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.box h3 {
+	margin-bottom: 10px;
+	font-size: 14px;
+}
+
+/* TABLE */
+table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+}
+
+th {
+	text-align: left;
+	color: #888;
+	font-weight: 500;
+	padding-bottom: 8px;
+}
+
+td {
+	padding: 8px 0;
+	border-bottom: 1px solid #eee;
+}
+
+/* FULL WIDTH TABLE */
+.full {
+	grid-column: span 2;
+}
+
+/* SIDE PANEL */
+.side-item {
+	background: #f5f6f8;
+	padding: 10px;
+	border-radius: 8px;
+	margin-bottom: 10px;
+	font-size: 13px;
+}
+
+/* BUTTONS */
+button {
+	padding: 8px 12px;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+}
+
+button.primary {
+	background: #4caf50;
+	color: white;
+}
+
+/* LOGOUT */
+.logout {
+	color: red;
+	cursor: pointer;
+	font-size: 13px;
+	margin-top: 20px;
+}
+
+/* LOGIN PAGE */
+.login-page {
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: #f5f6f8;
+}
+
+/* CARD */
+.login-card {
+	background: white;
+	padding: 30px;
+	width: 320px;
+	border-radius: 12px;
+	box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+	text-align: center;
+}
+
+/* TITLE */
+.login-card h2 {
+	margin-bottom: 5px;
+}
+
+.subtitle {
+	font-size: 13px;
+	color: #888;
+	margin-bottom: 15px;
+}
+
+/* INPUTS */
+.login-card input {
+	width: 100%;
+	padding: 10px;
+	margin-bottom: 10px;
+	border-radius: 8px;
+	border: 1px solid #ddd;
+	outline: none;
+	transition: 0.2s;
+}
+
+.login-card input:focus {
+	border-color: #4caf50;
+	box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+/* BUTTON */
+button.primary {
+	width: 100%;
+	padding: 10px;
+	background: #4caf50;
+	color: white;
+	border: none;
+	border-radius: 8px;
+	cursor: pointer;
+	transition: 0.2s;
+}
+
+button.primary:hover {
+	background: #43a047;
+}
+
+
+/* LOGIN CONTAINER */
+.login-container {
+	display: flex;
+	height: 100vh;
+}
+
+/* LEFT SIDE */
+.login-left {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 80px;
+}
+
+.login-left h2 {
+	font-size: 28px;
+	margin-bottom: 20px;
+}
+
+.login-left input {
+	width: 100%;
+	padding: 12px;
+	margin-bottom: 12px;
+	border-radius: 6px;
+	border: 1px solid #ddd;
+	font-size: 14px;
+}
+
+.login-left input:focus {
+	border-color: #4caf50;
+	box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.15);
+}
+
+/* BUTTON (DARK GREEN STYLE) */
+button.primary {
+	width: 100%;
+	padding: 12px;
+	background: #2e7d32; /* darker green */
+	color: white;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: 0.2s;
+}
+
+button.primary:hover {
+	background: #1b5e20;
+}
+
+/* RIGHT SIDE */
+.login-right {
+	flex: 1;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+/* PLACEHOLDER */
+.illustration-placeholder {
+	width: 250px;
+	height: 250px;
+	border-radius: 12px;
+	background: #ddd;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #666;
+	font-size: 14px;
+}
+
+/* FORGOT */
+.forgot {
+	margin-top: 10px;
+	font-size: 12px;
+	color: #555;
+	cursor: pointer;
+}
+
+/* ===================== */
+/* 📱 MOBILE RESPONSIVE */
+/* ===================== */
+
+@media (max-width: 768px) {
+
+	.login-container {
+		flex-direction: column;
+	}
+
+	.login-left {
+		padding: 30px;
+	}
+
+	.login-right {
+		display: none; /* hide image sa mobile */
+	}
+
+	.login-left h2 {
+		font-size: 22px;
+		text-align: center;
+	}
+
+	button.primary {
+		padding: 10px;
+	}
+
+}
+
+/* CHART FAKE STYLE */
+.chart {
+	height: 200px;
+	position: relative;
+	background: #fafafa;
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+/* LINES */
+.line {
+	position: absolute;
+	width: 100%;
+	height: 2px;
+	top: 50%;
+}
+
+.line.green {
+	border-top: 2px solid #4caf50;
+	transform: rotate(-10deg);
+}
+
+.line.red {
+	border-top: 2px solid #e74c3c;
+	transform: rotate(10deg);
+}
