@@ -1,15 +1,17 @@
+import { NavLink } from "react-router-dom"
+
 function Sidebar({ isOpen, role, toggleSidebar }) {
 
 	const adminMenu = [
-		"Dashboard",
-		"Books",
-		"Users",
+		{ name: "Dashboard", path: "/dashboard" },
+		{ name: "Books", path: "/books" },
+		{ name: "Users", path: "/users" },
 	]
 
 	const userMenu = [
-		"Profile",
-		"Borrow",
-		"Return",
+		{ name: "Profile", path: "/profile" },
+		{ name: "Borrow", path: "/borrow" },
+		{ name: "Return", path: "/return" },
 	]
 
 	const menu = role === "admin" ? adminMenu : userMenu
@@ -17,18 +19,32 @@ function Sidebar({ isOpen, role, toggleSidebar }) {
 	return (
 		<div className={`sidebar ${isOpen ? "open" : ""}`}>
 
-			{/* 🔥 CLOSE BUTTON */}
-			<button className="close-btn" onClick={toggleSidebar}>
-				←
-			</button>
+			{/* 🔝 HEADER */}
+			<div className="sidebar-header">
 
-			<h2>{role === "admin" ? "Admin Panel" : "User Panel"}</h2>
+				<button className="close-btn" onClick={toggleSidebar}>
+					←
+				</button>
 
-			<ul>
+				<h2>{role === "admin" ? "Admin Panel" : "User Panel"}</h2>
+			</div>
+
+			{/* 📋 MENU */}
+			<ul className="menu">
 				{menu.map((item, index) => (
-					<li key={index}>{item}</li>
+					<li key={index}>
+						<NavLink to={item.path} className="menu-link">
+							{item.name}
+						</NavLink>
+					</li>
 				))}
 			</ul>
+
+			{/* 🔻 FOOTER */}
+			<div className="sidebar-footer">
+				<p className="logout">Logout</p>
+			</div>
+
 		</div>
 	)
 }

@@ -26,12 +26,12 @@ html, body, #root {
 	width: 220px;
 	background: #ffffff;
 	border-right: 1px solid #eee;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
 	padding: 20px;
 
-	/* animation */
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between; /* 🔥 hati top-middle-bottom */
+
 	transition: transform 0.3s ease;
 }
 
@@ -78,12 +78,58 @@ html, body, #root {
 	background: #f0f0f0;
 }
 
+.sidebar-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 20px;
+}
+
+.sidebar-header h2 {
+	font-size: 16px;
+}
+
 .close-btn {
 	background: none;
 	border: none;
 	font-size: 20px;
 	cursor: pointer;
-	margin-bottom: 10px;
+
+	display: none; /* ❌ hidden by default */
+}
+
+/* 📱 MOBILE ONLY */
+@media (max-width: 768px) {
+	.close-btn {
+		display: block; /* ✅ show only mobile */
+	}
+}
+
+.menu {
+	list-style: none;
+	flex: 1; /* 🔥 para gitna talaga */
+}
+
+.menu li {
+	padding: 10px;
+	border-radius: 8px;
+	margin-bottom: 5px;
+	cursor: pointer;
+	color: #555;
+}
+
+.menu li:hover {
+	background: #f0f0f0;
+}
+
+.sidebar-footer {
+	margin-top: auto;
+}
+
+.logout {
+	color: red;
+	cursor: pointer;
+	font-size: 13px;
 }
 
 /* TOPBAR */
@@ -430,4 +476,100 @@ button.primary:hover {
 .line.red {
 	border-top: 2px solid #e74c3c;
 	transform: rotate(10deg);
+}
+
+.books-page {
+	background: #f5f1e8;
+	padding: 20px;
+}
+
+/* HEADER */
+.books-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.breadcrumb {
+	font-size: 12px;
+	color: #888;
+}
+
+/* TOP BAR */
+.books-topbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.books-actions {
+	display: flex;
+	gap: 10px;
+}
+
+.books-actions input {
+	padding: 8px;
+	border-radius: 6px;
+	border: 1px solid #ddd;
+}
+
+.books-actions select {
+	padding: 8px;
+	border-radius: 6px;
+	border: 1px solid #ddd;
+}
+
+/* TABLE CONTAINER */
+.books-table {
+	background: white;
+	border-radius: 12px;
+	padding: 15px;
+	box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* TABLE */
+.books-table table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 13px;
+}
+
+.books-table th {
+	text-align: left;
+	color: #888;
+	padding-bottom: 10px;
+}
+
+.books-table td {
+	padding: 10px 0;
+	border-bottom: 1px solid #eee;
+}
+
+/* ACTION BUTTONS */
+.icon-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	margin-right: 5px;
+	font-size: 14px;
+}
+
+.icon-btn.delete {
+	color: red;
+}
+
+/* GREEN BUTTON */
+button.primary {
+	background: #4caf50;
+	color: white;
+	padding: 10px 15px;
+	border-radius: 8px;
+	border: none;
+	cursor: pointer;
+}
+
+button.primary:hover {
+	background: #43a047;
 }

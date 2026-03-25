@@ -6,6 +6,7 @@ import Profile from "./pages/Profile"
 
 import AdminLayout from "./layouts/AdminLayout"
 import UserLayout from "./layouts/UserLayout"
+import Books from "./pages/Books"
 
 function App() {
 	return (
@@ -31,6 +32,15 @@ function App() {
 						<UserLayout>
 							<Profile />
 						</UserLayout>
+					}
+				/>
+
+				<Route
+					path="/books"
+					element={
+						<AdminLayout>
+							<Books />
+						</AdminLayout>
 					}
 				/>
 			</Routes>
