@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
+import UserDashboard from "./pages/UserDashboard"
 import Profile from "./pages/Profile"
 
 import AdminLayout from "./layouts/AdminLayout"
@@ -26,6 +27,15 @@ function App() {
 				/>
 
 				{/* USER */}
+				<Route
+					path="/user/dashboard"
+					element={
+						<UserLayout>
+							<UserDashboard />
+						</UserLayout>
+					}
+				/>
+
 				<Route
 					path="/profile"
 					element={

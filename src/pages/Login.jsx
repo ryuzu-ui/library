@@ -1,17 +1,146 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import '../global.css'
+import { supabase } from "../lib/supabaseClient"
 
 function Login() {
-	const [username, setUsername] = useState("")
+	const [mode, setMode] = useState("login")
+	const [fullName, setFullName] = useState("")
+	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
+	const [confirmPassword, setConfirmPassword] = useState("")
+	const [error, setError] = useState("")
+	const [message, setMessage] = useState("")
+	const [loading, setLoading] = useState(false)
+	const [heroImageOk, setHeroImageOk] = useState(true)
 	const navigate = useNavigate()
 
-	const handleLogin = () => {
-		if (username === "admin") {
+	const resolveRoleAndRedirect = async () => {
+		const {
+			data: { user },
+			error: userError,
+		} = await supabase.auth.getUser()
+
+		if (userError || !user) {
+			throw new Error("Unable to load user session")
+		}
+
+		const { data: profile, error: profileError } = await supabase
+			.from("profiles")
+			.select("id, roles(name)")
+			.eq("id", user.id)
+			.maybeSingle()
+
+		if (profileError) {
+			throw new Error(profileError.message)
+		}
+
+		const roleName = profile?.roles?.name
+		if (roleName === "admin") {
 			navigate("/dashboard")
-		} else {
-			navigate("/profile")
+			return
+		}
+
+		navigate("/user/dashboard")
+	}
+
+	const handleSubmit = async () => {
+		setError("")
+		setMessage("")
+
+		const trimmedEmail = email.trim()
+		if (!trimmedEmail || !password) {
+			setError("Please enter your email and password")
+			return
+		}
+
+		if (mode === "signup") {
+			if (!fullName.trim()) {
+				setError("Please enter your full name")
+				return
+			}
+
+			if (password.length < 6) {
+				setError("Password must be at least 6 characters")
+				return
+			}
+
+			if (password !== confirmPassword) {
+				setError("Passwords do not match")
+				return
+			}
+		}
+
+		setLoading(true)
+		try {
+			if (mode === "login") {
+				const { error: signInError } = await supabase.auth.signInWithPassword({
+					email: trimmedEmail,
+					password,
+				})
+
+				if (signInError) {
+					throw new Error(signInError.message)
+				}
+
+				await resolveRoleAndRedirect()
+				return
+			}
+
+			const { data, error: signUpError } = await supabase.auth.signUp({
+				email: trimmedEmail,
+				password,
+				options: {
+					data: {
+						full_name: fullName.trim(),
+					},
+				},
+			})
+
+			if (signUpError) {
+				throw new Error(signUpError.message)
+			}
+
+			if (!data?.session) {
+				setMessage(
+					"Account created. Please check your email to confirm your account, then log in."
+				)
+				setMode("login")
+				setPassword("")
+				setConfirmPassword("")
+				return
+			}
+
+			await resolveRoleAndRedirect()
+		} catch (e) {
+			setError(e?.message || "Something went wrong")
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const handleResetPassword = async () => {
+		setError("")
+		setMessage("")
+		const trimmedEmail = email.trim()
+		if (!trimmedEmail) {
+			setError("Enter your email first")
+			return
+		}
+
+		setLoading(true)
+		try {
+			const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+				trimmedEmail
+			)
+			if (resetError) {
+				throw new Error(resetError.message)
+			}
+			setMessage("Password reset email sent. Please check your inbox.")
+		} catch (e) {
+			setError(e?.message || "Unable to send reset email")
+		} finally {
+			setLoading(false)
 		}
 	}
 
@@ -20,31 +149,149 @@ function Login() {
 
 			{/* LEFT SIDE */}
 			<div className="login-left">
-				<h2>Log in</h2>
+				<div className="auth-card">
+					<div className="auth-header">
+						<h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
+						<p className="auth-subtitle">
+							{mode === "login"
+								? "Log in to continue to your dashboard"
+								: "Sign up as a user. Admin access is granted manually."}
+						</p>
+					</div>
 
-				<input
-					type="text"
-					placeholder="Username or Email"
-					onChange={(e) => setUsername(e.target.value)}
-				/>
+					<div className="auth-tabs">
+						<button
+							type="button"
+							className={mode === "login" ? "auth-tab auth-tab-active" : "auth-tab"}
+							onClick={() => {
+								setMode("login")
+								setError("")
+								setMessage("")
+							}}
+							disabled={loading}
+						>
+							Log in
+						</button>
+						<button
+							type="button"
+							className={mode === "signup" ? "auth-tab auth-tab-active" : "auth-tab"}
+							onClick={() => {
+								setMode("signup")
+								setError("")
+								setMessage("")
+							}}
+							disabled={loading}
+						>
+							Sign up
+						</button>
+					</div>
 
-				<input
-					type="password"
-					placeholder="Password"
-					onChange={(e) => setPassword(e.target.value)}
-				/>
+					{mode === "signup" ? (
+						<input
+							type="text"
+							placeholder="Full name"
+							value={fullName}
+							onChange={(e) => setFullName(e.target.value)}
+							disabled={loading}
+						/>
+					) : null}
 
-				<button className="primary" onClick={handleLogin}>
-					Log in
-				</button>
+					<input
+						type="email"
+						placeholder="Email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+						disabled={loading}
+					/>
 
-				<p className="forgot">Forgot Password?</p>
+					<input
+						type="password"
+						placeholder="Password"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						disabled={loading}
+					/>
+
+					{mode === "signup" ? (
+						<input
+							type="password"
+							placeholder="Confirm password"
+							value={confirmPassword}
+							onChange={(e) => setConfirmPassword(e.target.value)}
+							disabled={loading}
+						/>
+					) : null}
+
+					{error ? <p className="login-error">{error}</p> : null}
+					{message ? <p className="login-message">{message}</p> : null}
+
+					<button className="primary" onClick={handleSubmit} disabled={loading}>
+						{loading ? "Please wait..." : mode === "login" ? "Log in" : "Create account"}
+					</button>
+
+					{mode === "login" ? (
+						<button
+							type="button"
+							className="auth-link"
+							onClick={handleResetPassword}
+							disabled={loading}
+						>
+							Forgot password?
+						</button>
+					) : null}
+				</div>
 			</div>
 
 			{/* RIGHT SIDE */}
 			<div className="login-right">
-				<div className="illustration-placeholder">
-					Books Image Here
+				<div className="auth-hero">
+					<div className="auth-hero-card">
+						{heroImageOk ? (
+							<img
+								className="auth-hero-image"
+								src="/library-hero.png"
+								alt="Library Management System"
+								onError={() => setHeroImageOk(false)}
+							/>
+						) : (
+							<svg
+								className="library-icon"
+								viewBox="0 0 24 24"
+								fill="none"
+								xmlns="http://www.w3.org/2000/svg"
+								aria-hidden="true"
+							>
+								<path
+									d="M5 4.5C5 3.11929 6.11929 2 7.5 2H19a1 1 0 0 1 1 1V18.5a2.5 2.5 0 0 0-2.5-2.5H7.5A2.5 2.5 0 0 0 5 18.5V4.5Z"
+									stroke="currentColor"
+									strokeWidth="1.8"
+									strokeLinejoin="round"
+								/>
+								<path
+									d="M7.5 2H18v14H7.5A2.5 2.5 0 0 0 5 18.5"
+									stroke="currentColor"
+									strokeWidth="1.8"
+									strokeLinejoin="round"
+								/>
+								<path
+									d="M9 6h6"
+									stroke="currentColor"
+									strokeWidth="1.8"
+									strokeLinecap="round"
+								/>
+								<path
+									d="M9 9h6"
+									stroke="currentColor"
+									strokeWidth="1.8"
+									strokeLinecap="round"
+								/>
+							</svg>
+						)}
+						<div className="auth-hero-title">Library Management System</div>
+						<div className="auth-hero-subtitle">
+							A modern way to manage books, loans, and users.
+						</div>
+					</div>
 				</div>
 			</div>
 

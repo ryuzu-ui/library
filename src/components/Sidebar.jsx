@@ -1,6 +1,9 @@
-import { NavLink } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
+import { supabase } from "../lib/supabaseClient"
 
-function Sidebar({ isOpen, role, toggleSidebar }) {
+function Sidebar({ isOpen, role, toggleSidebar, onNavigate }) {
+
+	const navigate = useNavigate()
 
 	const adminMenu = [
 		{ name: "Dashboard", path: "/dashboard" },
@@ -9,6 +12,7 @@ function Sidebar({ isOpen, role, toggleSidebar }) {
 	]
 
 	const userMenu = [
+		{ name: "Dashboard", path: "/user/dashboard" },
 		{ name: "Profile", path: "/profile" },
 		{ name: "Borrow", path: "/borrow" },
 		{ name: "Return", path: "/return" },
@@ -16,9 +20,19 @@ function Sidebar({ isOpen, role, toggleSidebar }) {
 
 	const menu = role === "admin" ? adminMenu : userMenu
 
+	const handleLogout = async () => {
+		try {
+			await supabase.auth.signOut()
+		} finally {
+			if (typeof onNavigate === "function") onNavigate()
+			navigate("/")
+		}
+	}
+
 	return (
 		<div className={`sidebar ${isOpen ? "open" : ""}`}>
 
+			{/* HEADER */}
 			{/* 🔝 HEADER */}
 			<div className="sidebar-header">
 
@@ -26,14 +40,22 @@ function Sidebar({ isOpen, role, toggleSidebar }) {
 					←
 				</button>
 
-				<h2>{role === "admin" ? "Admin Panel" : "User Panel"}</h2>
+				<h2>Library App</h2>
 			</div>
 
 			{/* 📋 MENU */}
 			<ul className="menu">
 				{menu.map((item, index) => (
 					<li key={index}>
-						<NavLink to={item.path} className="menu-link">
+						<NavLink
+							to={item.path}
+							className={({ isActive }) =>
+								`menu-link ${isActive ? "active" : ""}`
+							}
+							onClick={() => {
+								if (typeof onNavigate === "function") onNavigate()
+							}}
+						>
 							{item.name}
 						</NavLink>
 					</li>
@@ -42,7 +64,7 @@ function Sidebar({ isOpen, role, toggleSidebar }) {
 
 			{/* 🔻 FOOTER */}
 			<div className="sidebar-footer">
-				<p className="logout">Logout</p>
+				<p className="logout" onClick={handleLogout}>Logout</p>
 			</div>
 
 		</div>
