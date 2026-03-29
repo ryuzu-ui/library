@@ -10,6 +10,7 @@ import UserLayout from "./layouts/UserLayout"
 import Books from "./pages/Books"
 import Users from "./pages/Users"
 import MyBooks from "./pages/MyBooks"
+import Home from "./pages/Home"
 
 function App() {
 	return (
@@ -34,6 +35,15 @@ function App() {
 					element={
 						<UserLayout>
 							<UserDashboard />
+						</UserLayout>
+					}
+				/>
+
+				<Route
+					path="/user/home"
+					element={
+						<UserLayout>
+							<Home />
 						</UserLayout>
 					}
 				/>

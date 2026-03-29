@@ -1,11 +1,14 @@
 import { useState } from "react"
 import BookDetailsModal from "./BookDetailsModal"
+import AddBookModal from "./AddBookModal"
+
 
 function Books() {
 
 	const [selectedBook, setSelectedBook] = useState(null)
+	const [addOpen, setAddOpen] = useState(false)
 
-	const books = [
+	const [books, setBooks] = useState([
 		{
 			name: "The Last Bookshop in Prague",
 			author: "Helen Parusel",
@@ -18,7 +21,7 @@ function Books() {
 			date: "September 22, 2024",
 			image: "https://covers.openlibrary.org/b/id/12883075-L.jpg"
 		}
-	]
+	])
 
 	return (
 		<div className="page">
@@ -31,7 +34,12 @@ function Books() {
 
 				<div className="page-actions">
 					<input placeholder="Search books..." />
-					<button className="primary">Add Book</button>
+					<button 
+						className="primary"
+						onClick={() => setAddOpen(true)}
+					>
+						Add Book
+					</button>
 				</div>
 			</div>
 
@@ -56,6 +64,14 @@ function Books() {
 				book={selectedBook}
 				role="admin" // 👈 ADD THIS
 				onClose={() => setSelectedBook(null)}
+			/>
+
+			<AddBookModal
+				isOpen={addOpen}
+				onClose={() => setAddOpen(false)}
+				onAdd={(newBook) => {
+					setBooks(prev => [...prev, newBook])
+				}}
 			/>
 
 		</div>
