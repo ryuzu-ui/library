@@ -63,7 +63,14 @@ function Home() {
 						onClick={() => setSelectedBook(book)}
 					>
 						<img src={book.image} />
-						<p>{book.name}</p>
+
+						{/* SAME STRUCTURE SA BOOKS */}
+						<div className="book-info">
+							<h4>{book.name}</h4>
+							<p>{book.author}</p>
+							<span>{book.date}</span>
+						</div>
+
 					</div>
 				))}
 			</div>
