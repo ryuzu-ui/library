@@ -6,20 +6,25 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 		name: "",
 		author: "",
 		date: "",
-		image: ""
+		coverUrl: "",
+		imagePreview: "",
+		coverFile: null
 	})
+	const [localError, setLocalError] = useState("")
+	const [submitting, setSubmitting] = useState(false)
 
 	if (!isOpen) return null
 
 	const handleChange = (e) => {
 		const { name, value } = e.target
+		setLocalError("")
 		setForm(prev => ({
 			...prev,
 			[name]: value
 		}))
 	}
 
-	// 📸 HANDLE FILE UPLOAD
+	// HANDLE FILE UPLOAD
 	const handleImageUpload = (file) => {
 		if (!file) return
 
@@ -27,29 +32,65 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 		reader.onloadend = () => {
 			setForm(prev => ({
 				...prev,
-				image: reader.result // base64 preview
+				imagePreview: reader.result,
+				coverFile: file
 			}))
 		}
 		reader.readAsDataURL(file)
 	}
 
-	// 📦 DRAG DROP
+	// DRAG DROP
 	const handleDrop = (e) => {
 		e.preventDefault()
 		const file = e.dataTransfer.files[0]
 		handleImageUpload(file)
 	}
 
-	const handleSubmit = () => {
-		if (onAdd) onAdd(form)
-		onClose()
+	const handleSubmit = async () => {
+		const title = (form.name || "").trim()
+		const year = (form.date || "").trim()
+		if (!title) {
+			setLocalError("Book name is required")
+			return
+		}
+		if (!year) {
+			setLocalError("Publication year is required")
+			return
+		}
+		if (!onAdd) {
+			onClose()
+			return
+		}
 
-		setForm({
-			name: "",
-			author: "",
-			date: "",
-			image: ""
-		})
+		setSubmitting(true)
+		try {
+			const payload = {
+				name: form.name,
+				author: form.author,
+				date: form.date,
+				image: form.coverUrl || form.imagePreview,
+				coverFile: form.coverFile,
+			}
+			const result = await onAdd(payload)
+			if (result?.success === false) {
+				setLocalError(result?.message || "Unable to add book")
+				return
+			}
+			onClose()
+
+			setForm({
+				name: "",
+				author: "",
+				date: "",
+				coverUrl: "",
+				imagePreview: "",
+				coverFile: null
+			})
+		} catch (e) {
+			setLocalError(e?.message || "Unable to add book")
+		} finally {
+			setSubmitting(false)
+		}
 	}
 
 	return (
@@ -65,7 +106,7 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 						onDrop={handleDrop}
 					>
 						<img 
-							src={form.image || "https://via.placeholder.com/150"} 
+							src={form.imagePreview || form.coverUrl || "https://via.placeholder.com/150"} 
 							alt="preview"
 						/>
 
@@ -80,41 +121,73 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 						</label>
 					</div>
 
-					{/* RIGHT SIDE FORM */}
 					<div className="book-details">
-
-						<h3>Add Book</h3>
-
-						<input
-							name="name"
-							value={form.name}
-							onChange={handleChange}
-							placeholder="Book Name"
-						/>
-
-						<input
-							name="author"
-							value={form.author}
-							onChange={handleChange}
-							placeholder="Author"
-						/>
-
-						<input
-							name="date"
-							value={form.date}
-							onChange={handleChange}
-							placeholder="Publish Date"
-						/>
-
-						<div className="modal-actions">
-							<button className="primary" onClick={handleSubmit}>
-								Add Book
-							</button>
-							<button className="cancel" onClick={onClose}>
-								Cancel
+						<div className="modal-header">
+							<div>
+								<h3 className="modal-title">Add Book</h3>
+								<div className="modal-subtitle">Add a new title to your library</div>
+							</div>
+							<button className="modal-close" onClick={onClose} aria-label="Close">
+								×
 							</button>
 						</div>
 
+						{localError ? <div className="form-error">{localError}</div> : null}
+
+						<div className="form-grid">
+							<div className="form-field">
+								<label>Book name</label>
+								<input
+									name="name"
+									value={form.name}
+									onChange={handleChange}
+									placeholder="e.g., Clean Code"
+									autoFocus
+								/>
+							</div>
+
+							<div className="form-field">
+								<label>Author</label>
+								<input
+									name="author"
+									value={form.author}
+									onChange={handleChange}
+									placeholder="e.g., Robert C. Martin"
+								/>
+							</div>
+
+							<div className="form-field">
+								<label>Publication year</label>
+								<input
+									name="date"
+									type="number"
+									inputMode="numeric"
+									value={form.date}
+									onChange={handleChange}
+									placeholder="e.g., 2008"
+									min="0"
+								/>
+							</div>
+
+							<div className="form-field">
+								<label>Cover image (URL or upload)</label>
+								<input
+									name="coverUrl"
+									value={form.coverUrl}
+									onChange={handleChange}
+									placeholder="https://..."
+								/>
+							</div>
+						</div>
+
+						<div className="modal-actions modal-actions-row">
+							<button className="cancel" onClick={onClose} disabled={submitting}>
+								Cancel
+							</button>
+							<button className="primary" onClick={handleSubmit} disabled={submitting}>
+								{submitting ? "Adding..." : "Add Book"}
+							</button>
+						</div>
 					</div>
 
 				</div>
