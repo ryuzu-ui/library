@@ -15,7 +15,7 @@ body {
 /* LAYOUT */
 .app {
 	display: flex;
-	min-height: 100vh; /* instead of height: 100% */
+	min-height: 100vh;
 	position: relative;
 	overflow-x: hidden;
 }
@@ -33,7 +33,7 @@ html, body, #root {
 
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between; /* 🔥 hati top-middle-bottom */
+	justify-content: space-between;
 
 	position: fixed;
 	top: 0;
@@ -131,14 +131,12 @@ html, body, #root {
 	border: none;
 	font-size: 20px;
 	cursor: pointer;
-
-	display: none; /* ❌ hidden by default */
+	display: none;
 }
 
-/* 📱 MOBILE ONLY */
 @media (max-width: 768px) {
 	.close-btn {
-		display: block; /* ✅ show only mobile */
+		display: block;
 	}
 	.app.sidebar-open .main {
 		width: 100%;
@@ -148,7 +146,7 @@ html, body, #root {
 
 .menu {
 	list-style: none;
-	flex: 1; /* 🔥 para gitna talaga */
+	flex: 1;
 }
 
 .menu li {
@@ -697,7 +695,7 @@ button.primary:hover {
 button.primary {
 	width: 100%;
 	padding: 12px;
-	background: #2e7d32; /* darker green */
+	background: #2e7d32;
 	color: white;
 	border: none;
 	border-radius: 6px;
@@ -852,7 +850,7 @@ button.primary:hover {
 	}
 
 	.login-right {
-		display: none; /* hide image sa mobile */
+		display: none;
 	}
 
 	.login-left h2 {
@@ -994,15 +992,8 @@ button.primary:hover {
 	padding: 20px;
 }
 
-/* HEADER */
-
 .users-header h2 {
 	margin-bottom: 4px;
-}
-
-.breadcrumb {
-	font-size: 12px;
-	color: #888;
 }
 
 /* TOP BAR */
@@ -1051,19 +1042,6 @@ button.primary:hover {
 .users-table td {
 	padding: 10px 0;
 	border-bottom: 1px solid #eee;
-}
-
-/* ACTION BUTTONS */
-.icon-btn {
-	background: none;
-	border: none;
-	cursor: pointer;
-	margin-right: 5px;
-	font-size: 14px;
-}
-
-.icon-btn.delete {
-	color: red;
 }
 
 .users-header {
@@ -1128,11 +1106,6 @@ button.primary:hover {
 	margin-bottom: 20px;
 }
 
-.breadcrumb {
-	font-size: 12px;
-	color: #888;
-}
-
 /* ACTIONS (SEARCH + BUTTON) */
 .page-actions {
 	display: flex;
@@ -1147,20 +1120,6 @@ button.primary:hover {
 	background: #f0f0f0;
 	width: 220px;
 	outline: none;
-}
-
-/* BUTTON */
-button.primary {
-	background: #4caf50;
-	color: white;
-	padding: 8px 16px;
-	border-radius: 20px;
-	border: none;
-	cursor: pointer;
-}
-
-button.primary:hover {
-	background: #43a047;
 }
 
 /* TABLE CONTAINER */
@@ -1204,36 +1163,15 @@ button.primary:hover {
 	border-color: #f5c6c6;
 }
 
-/* REMOVE ICONS */
 .btn::before,
 .btn::after {
 	content: none !important;
 }
 
-/* PAGE */
-.page {
-	padding: 20px;
-	background: #f5f1e8;
-}
-
-/* HEADER */
-.page-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 20px;
-}
-
-/* TITLE SIDE */
+/* PAGE HEADER */
 .page-header h2 {
 	font-size: 20px;
 	margin-bottom: 4px;
-}
-
-/* BREADCRUMB */
-.breadcrumb {
-	font-size: 12px;
-	color: #888;
 }
 
 /* RIGHT SIDE (SEARCH + BUTTON) */
@@ -1243,7 +1181,6 @@ button.primary:hover {
 	gap: 10px;
 }
 
-/* SEARCH */
 .page-actions input {
 	padding: 8px 14px;
 	border-radius: 20px;
@@ -1252,7 +1189,6 @@ button.primary:hover {
 	width: 220px;
 }
 
-/* BUTTON */
 button.primary {
 	padding: 8px 16px;
 	border-radius: 20px;
@@ -1266,6 +1202,10 @@ button.primary {
 .table-card {
 	margin-top: 10px;
 }
+
+/* ================================
+   MODAL
+================================ */
 .modal-overlay {
 	position: fixed;
 	top: 0;
@@ -1278,31 +1218,32 @@ button.primary {
 	justify-content: center;
 	z-index: 1000;
 }
+
 .modal {
 	background: #f9f9f9;
 	padding: 32px 28px;
-	width: 380px; /* mas malaki */
+	width: 380px;
 	border-radius: 8px;
-	text-align: center;
+	text-align: left; /* ✅ FIXED: was "center" */
 	box-shadow: 0 6px 25px rgba(0,0,0,0.15);
 }
 
 .modal h3 {
 	margin-bottom: 8px;
-	font-size: 20px; /* mas malaki title */
+	font-size: 20px;
 	font-weight: 600;
 }
 
 .modal p {
 	font-size: 13px;
 	color: #888;
-	margin-bottom: 22px; /* mas malaki space */
+	margin-bottom: 22px;
 }
 
 .modal input {
 	width: 100%;
-	padding: 12px; /* mas malaki input */
-	margin-bottom: 14px; /* dagdag space pagitan */
+	padding: 12px;
+	margin-bottom: 14px;
 	border: 1px solid #ddd;
 	border-radius: 5px;
 	font-size: 14px;
@@ -1312,7 +1253,7 @@ button.primary {
 .modal-actions {
 	display: flex;
 	flex-direction: column;
-	gap: 12px; /* mas maluwag buttons */
+	gap: 12px;
 	margin-top: 16px;
 }
 
@@ -1703,11 +1644,6 @@ button.primary {
 .profile-actions {
 	margin-top: 20px;
 	text-align: right;
-}
-
-.book-modal-content {
-	display: flex;
-	gap: 20px;
 }
 
 .book-image-preview img {
