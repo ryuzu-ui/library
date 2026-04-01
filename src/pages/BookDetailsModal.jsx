@@ -26,6 +26,16 @@ function BookDetailsModal({ isOpen, onClose, book, role, onBorrow, onEdit }) {
 						<p className="author">{book.author}</p>
 						<p className="date">{book.date}</p>
 
+						{Array.isArray(book.categories) && book.categories.length ? (
+							<div className="book-tags">
+								{book.categories.map((c) => (
+									<span className="tag" key={c}>
+										{c}
+									</span>
+								))}
+							</div>
+						) : null}
+
 						<p className="desc">
 							This is a sample description of the book.
 						</p>
@@ -34,15 +44,16 @@ function BookDetailsModal({ isOpen, onClose, book, role, onBorrow, onEdit }) {
 
 							{role === "admin" && (
 								<>
-									<button className="primary" onClick={() => onEdit?.(book)}>
+									<button type="button" className="primary" onClick={() => onEdit?.(book)}>
 										Edit
 									</button>
-									<button className="btn delete">Delete</button>
+									<button type="button" className="btn delete">Delete</button>
 								</>
 							)}
 
 							{role === "user" && onBorrow && (
-								<button 
+								<button
+									type="button"
 									className="primary"
 									onClick={() => onBorrow(book)}
 								>
@@ -50,7 +61,7 @@ function BookDetailsModal({ isOpen, onClose, book, role, onBorrow, onEdit }) {
 								</button>
 							)}
 
-							<button className="cancel" onClick={onClose}>
+							<button type="button" className="cancel" onClick={onClose}>
 								Close
 							</button>
 
