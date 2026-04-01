@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
-function AddBookModal({ isOpen, onClose, onAdd }) {
+function AddBookModal({ isOpen, onClose, onAdd, categories = [] }) {
 
 	const [form, setForm] = useState({
 		name: "",
@@ -8,8 +8,10 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 		date: "",
 		coverUrl: "",
 		imagePreview: "",
-		coverFile: null
+		coverFile: null,
+		categories: []
 	})
+
 	const [localError, setLocalError] = useState("")
 	const [submitting, setSubmitting] = useState(false)
 
@@ -47,6 +49,7 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 	}
 
 	const handleSubmit = async () => {
+
 		const title = (form.name || "").trim()
 		const year = (form.date || "").trim()
 		if (!title) {
@@ -70,7 +73,9 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 				date: form.date,
 				image: form.coverUrl || form.imagePreview,
 				coverFile: form.coverFile,
+				categories: form.categories,
 			}
+
 			const result = await onAdd(payload)
 			if (result?.success === false) {
 				setLocalError(result?.message || "Unable to add book")
@@ -84,13 +89,28 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 				date: "",
 				coverUrl: "",
 				imagePreview: "",
-				coverFile: null
+				coverFile: null,
+				categories: []
 			})
 		} catch (e) {
 			setLocalError(e?.message || "Unable to add book")
 		} finally {
 			setSubmitting(false)
 		}
+	}
+
+	const categoryOptions = useMemo(() => {
+		return (categories || []).filter(Boolean)
+	}, [categories])
+
+	const toggleCategory = (cat) => {
+		setLocalError("")
+		setForm((prev) => {
+			const next = new Set(prev.categories || [])
+			if (next.has(cat)) next.delete(cat)
+			else next.add(cat)
+			return { ...prev, categories: Array.from(next) }
+		})
 	}
 
 	return (
@@ -100,19 +120,19 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 				<div className="book-modal-content">
 
 					{/* LEFT SIDE IMAGE */}
-					<div 
+					<div
 						className="book-image-preview upload-box"
 						onDragOver={(e) => e.preventDefault()}
 						onDrop={handleDrop}
 					>
-						<img 
-							src={form.imagePreview || form.coverUrl || "https://via.placeholder.com/150"} 
+						<img
+							src={form.imagePreview || form.coverUrl || "https://via.placeholder.com/150"}
 							alt="preview"
 						/>
 
 						<label className="upload-label">
-							<input 
-								type="file" 
+							<input
+								type="file"
 								accept="image/*"
 								onChange={(e) => handleImageUpload(e.target.files[0])}
 								hidden
@@ -135,6 +155,7 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 						{localError ? <div className="form-error">{localError}</div> : null}
 
 						<div className="form-grid">
+
 							<div className="form-field">
 								<label>Book name</label>
 								<input
@@ -177,6 +198,31 @@ function AddBookModal({ isOpen, onClose, onAdd }) {
 									onChange={handleChange}
 									placeholder="https://..."
 								/>
+							</div>
+
+							<div className="form-field form-field-full">
+								<label>Categories</label>
+								<div className="category-pills">
+									{categoryOptions.length ? (
+										categoryOptions.map((c) => (
+											<button
+												type="button"
+												key={c}
+												className={
+													form.categories?.includes(c)
+														? "pill pill-active"
+														: "pill"
+												}
+												onClick={() => toggleCategory(c)}
+												disabled={submitting}
+											>
+												{c}
+											</button>
+										))
+									) : (
+										<div className="muted">No categories yet</div>
+									)}
+								</div>
 							</div>
 						</div>
 

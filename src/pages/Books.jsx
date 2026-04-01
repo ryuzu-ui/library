@@ -12,23 +12,29 @@ function Books() {
 	const [editOpen, setEditOpen] = useState(false)
 	const [editBook, setEditBook] = useState(null)
 	const [search, setSearch] = useState("")
+	const [filtersOpen, setFiltersOpen] = useState(false)
+	const [authorFilter, setAuthorFilter] = useState("")
+	const [categoryFilter, setCategoryFilter] = useState("")
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState("")
 
 
 	const [books, setBooks] = useState([])
+	const [categories, setCategories] = useState([])
+
 
 	const placeholderCover =
 		"https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=600&q=60"
 
 	const loadBooks = async () => {
+
 		setError("")
 		setLoading(true)
 		try {
 			const { data, error: booksError } = await supabase
 				.from("books")
 				.select(
-					"id, title, publication_year, cover_url, book_authors(authors(name))"
+					"id, title, publication_year, cover_url, book_authors(authors(name)), book_categories(categories(name))"
 				)
 				.order("created_at", { ascending: false })
 
@@ -40,6 +46,9 @@ function Books() {
 					.filter(Boolean)
 				const author = authorNames.length ? authorNames.join(", ") : "Unknown"
 				const date = b.publication_year ? `Published: ${b.publication_year}` : ""
+				const categoryNames = (b.book_categories || [])
+					.map((bc) => bc?.categories?.name)
+					.filter(Boolean)
 
 				return {
 					id: b.id,
@@ -49,6 +58,7 @@ function Books() {
 					image: b.cover_url || placeholderCover,
 					publicationYear: b.publication_year ?? null,
 					coverUrl: b.cover_url ?? "",
+					categories: categoryNames,
 				}
 			})
 
@@ -60,20 +70,74 @@ function Books() {
 		}
 	}
 
+	const loadCategories = async () => {
+		try {
+			const { data, error } = await supabase
+				.from("categories")
+				.select("id, name")
+			if (error) throw new Error(error.message)
+			setCategories(data || [])
+		} catch (e) {
+			setError(e?.message || "Unable to load categories")
+		}
+	}
+
 	useEffect(() => {
 		void loadBooks()
+		void loadCategories()
 	}, [])
+
+	const authorOptions = useMemo(() => {
+		const set = new Set()
+		for (const b of books) {
+			if (b.author && b.author !== "Unknown") set.add(b.author)
+		}
+		return Array.from(set).sort((a, b) => a.localeCompare(b))
+	}, [books])
+
+	const categoryOptions = useMemo(() => {
+		if (categories.length) return categories.map((c) => c.name)
+		const set = new Set()
+		for (const b of books) {
+			for (const c of b.categories || []) set.add(c)
+		}
+		return Array.from(set).sort((a, b) => a.localeCompare(b))
+	}, [books, categories])
 
 	const filteredBooks = useMemo(() => {
 		const q = search.trim().toLowerCase()
 		if (!q) return books
-		return books.filter((b) => {
-			const hay = `${b.name} ${b.author}`.toLowerCase()
-			return hay.includes(q)
-		})
+		return books
+			.filter((b) => {
+				const hay = `${b.name} ${b.author}`.toLowerCase()
+				return hay.includes(q)
+			})
+			.filter((b) => {
+				if (authorFilter && b.author !== authorFilter) return false
+				if (categoryFilter) {
+					const bookCats = b.categories || []
+					if (!bookCats.includes(categoryFilter)) return false
+				}
+				return true
+			})
 	}, [books, search])
 
+	const filteredBooksWithFilters = useMemo(() => {
+		const q = search.trim().toLowerCase()
+		return books.filter((b) => {
+			const hay = `${b.name} ${b.author}`.toLowerCase()
+			if (q && !hay.includes(q)) return false
+			if (authorFilter && b.author !== authorFilter) return false
+			if (categoryFilter) {
+				const bookCats = b.categories || []
+				if (!bookCats.includes(categoryFilter)) return false
+			}
+			return true
+		})
+	}, [books, search, authorFilter, categoryFilter])
+
 	const handleAddBook = async (newBook) => {
+
 		setError("")
 		setLoading(true)
 		try {
@@ -81,6 +145,10 @@ function Books() {
 			const authorName = (newBook?.author || "").trim()
 			const coverUrl = (newBook?.image || "").trim()
 			const coverFile = newBook?.coverFile ?? null
+			const nextCategories = Array.isArray(newBook?.categories)
+				? newBook.categories
+				: []
+
 			const rawYear = (newBook?.date || "").trim()
 			const publicationYear = rawYear ? Number.parseInt(rawYear, 10) : null
 
@@ -132,6 +200,7 @@ function Books() {
 			}
 
 			if (!coverUrlForDb && coverFile) {
+
 				const fileExt = (coverFile.name || "").split(".").pop() || "png"
 				const fileId =
 					typeof crypto !== "undefined" && crypto.randomUUID
@@ -169,6 +238,33 @@ function Books() {
 				if (updateCoverError) throw new Error(updateCoverError.message)
 			}
 
+			const categoryNames = Array.from(
+				new Set(
+					nextCategories
+						.map((c) => String(c || "").trim())
+						.filter(Boolean)
+				)
+			)
+			if (categoryNames.length) {
+				const { data: upsertedCats, error: catError } = await supabase
+					.from("categories")
+					.upsert(categoryNames.map((name) => ({ name })), { onConflict: "name" })
+					.select("id")
+				if (catError) throw new Error(catError.message)
+
+				await supabase.from("book_categories").delete().eq("book_id", upsertedBook.id)
+				const links = (upsertedCats || []).map((c) => ({
+					book_id: upsertedBook.id,
+					category_id: c.id,
+				}))
+				if (links.length) {
+					const { error: linkErr } = await supabase
+						.from("book_categories")
+						.upsert(links, { onConflict: "book_id,category_id" })
+					if (linkErr) throw new Error(linkErr.message)
+				}
+			}
+
 			await loadBooks()
 			return { success: true }
 		} catch (e) {
@@ -191,6 +287,7 @@ function Books() {
 	}
 
 	const handleSaveBook = async (updatedBook) => {
+
 		setError("")
 		setLoading(true)
 		try {
@@ -200,6 +297,9 @@ function Books() {
 			const coverFile = updatedBook?.coverFile ?? null
 			const rawYear = (updatedBook?.date || "").trim()
 			const publicationYear = rawYear ? Number.parseInt(rawYear, 10) : null
+			const nextCategories = Array.isArray(updatedBook?.categories)
+				? updatedBook.categories
+				: []
 
 			if (!title) {
 				throw new Error("Book name is required")
@@ -245,6 +345,7 @@ function Books() {
 			}
 
 			if (!coverUrlForDb && coverFile) {
+
 				const fileExt = (coverFile.name || "").split(".").pop() || "png"
 				const fileId =
 					typeof crypto !== "undefined" && crypto.randomUUID
@@ -282,6 +383,33 @@ function Books() {
 				if (updateCoverError) throw new Error(updateCoverError.message)
 			}
 
+			const categoryNames = Array.from(
+				new Set(
+					nextCategories
+						.map((c) => String(c || "").trim())
+						.filter(Boolean)
+				)
+			)
+			if (categoryNames.length) {
+				const { data: upsertedCats, error: catError } = await supabase
+					.from("categories")
+					.upsert(categoryNames.map((name) => ({ name })), { onConflict: "name" })
+					.select("id")
+				if (catError) throw new Error(catError.message)
+
+				await supabase.from("book_categories").delete().eq("book_id", updatedBook.id)
+				const links = (upsertedCats || []).map((c) => ({
+					book_id: updatedBook.id,
+					category_id: c.id,
+				}))
+				if (links.length) {
+					const { error: linkErr } = await supabase
+						.from("book_categories")
+						.upsert(links, { onConflict: "book_id,category_id" })
+					if (linkErr) throw new Error(linkErr.message)
+				}
+			}
+
 			await loadBooks()
 			return { success: true }
 		} catch (e) {
@@ -307,7 +435,13 @@ function Books() {
 						value={search}
 						onChange={(e) => setSearch(e.target.value)}
 					/>
-					<button 
+					<button
+						className="btn filter-btn"
+						onClick={() => setFiltersOpen((v) => !v)}
+					>
+						Filter
+					</button>
+					<button
 						className="primary"
 						onClick={() => setAddOpen(true)}
 					>
@@ -316,18 +450,65 @@ function Books() {
 				</div>
 			</div>
 
+			{filtersOpen ? (
+				<div className="filters-panel">
+					<div className="filters-row">
+						<div className="filter-field">
+							<label>Author</label>
+							<select
+								value={authorFilter}
+								onChange={(e) => setAuthorFilter(e.target.value)}
+							>
+								<option value="">All</option>
+								{authorOptions.map((a) => (
+									<option key={a} value={a}>
+										{a}
+									</option>
+								))}
+							</select>
+						</div>
+
+						<div className="filter-field">
+							<label>Category</label>
+							<select
+								value={categoryFilter}
+								onChange={(e) => setCategoryFilter(e.target.value)}
+							>
+								<option value="">All</option>
+								{categoryOptions.map((c) => (
+									<option key={c} value={c}>
+										{c}
+									</option>
+								))}
+							</select>
+						</div>
+
+						<button
+							className="btn"
+							onClick={() => {
+								setAuthorFilter("")
+								setCategoryFilter("")
+							}}
+						>
+							Clear
+						</button>
+					</div>
+				</div>
+			) : null}
+
 			{error ? <p className="login-error">{error}</p> : null}
 
 			<div className="books-grid">
+
 				{loading ? (
 					<div style={{ padding: 10, color: "#666" }}>Loading books...</div>
 				) : null}
-				{!loading && !filteredBooks.length ? (
+				{!loading && !filteredBooksWithFilters.length ? (
 					<div className="books-empty">No books found.</div>
 				) : null}
-				{filteredBooks.map((book, i) => (
-					<div 
-						className="book-card" 
+				{filteredBooksWithFilters.map((book, i) => (
+					<div
+						className="book-card"
 						key={book.id ?? i}
 						onClick={() => setSelectedBook(book)}
 					>
@@ -335,15 +516,25 @@ function Books() {
 						<div className="book-info">
 							<h4>{book.name}</h4>
 							<p>{book.author}</p>
+							{book.categories?.length ? (
+								<div className="book-tags">
+									{book.categories.slice(0, 2).map((c) => (
+										<span className="tag" key={c}>
+											{c}
+										</span>
+									))}
+								</div>
+							) : null}
 							<span>{book.date}</span>
 						</div>
 					</div>
 				))}
 			</div>
-			<BookDetailsModal 
+
+			<BookDetailsModal
 				isOpen={!!selectedBook}
 				book={selectedBook}
-				role="admin" 
+				role="admin"
 				onClose={() => setSelectedBook(null)}
 				onEdit={handleEditOpen}
 			/>
@@ -352,6 +543,7 @@ function Books() {
 				isOpen={addOpen}
 				onClose={() => setAddOpen(false)}
 				onAdd={handleAddBook}
+				categories={categoryOptions}
 			/>
 
 			<EditBookModal
@@ -362,6 +554,7 @@ function Books() {
 					setEditBook(null)
 				}}
 				onSave={handleSaveBook}
+				categories={categoryOptions}
 			/>
 
 		</div>

@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 
-function EditBookModal({ isOpen, onClose, book, onSave }) {
+function EditBookModal({ isOpen, onClose, book, onSave, categories = [] }) {
 
 	const [form, setForm] = useState({
 		name: "",
 		author: "",
 		date: "",
 		image: "",
-		coverFile: null
+		coverFile: null,
+		categories: []
 	})
 	const [localError, setLocalError] = useState("")
 	const [submitting, setSubmitting] = useState(false)
@@ -23,6 +24,7 @@ function EditBookModal({ isOpen, onClose, book, onSave }) {
 				date: book.date || "",
 				image: book.image || "",
 				coverFile: null,
+				categories: Array.isArray(book.categories) ? book.categories : [],
 			})
 		}
 	}, [book])
@@ -46,6 +48,19 @@ function EditBookModal({ isOpen, onClose, book, onSave }) {
 		}))
 	}
 
+	const toggleCategory = (category) => {
+		setForm((prev) => {
+			const categories = [...prev.categories]
+			const index = categories.indexOf(category)
+			if (index >= 0) {
+				categories.splice(index, 1)
+			} else {
+				categories.push(category)
+			}
+			return { ...prev, categories }
+		})
+	}
+
 	const handleSubmit = async () => {
 		if (!onSave) {
 			onClose()
@@ -65,6 +80,8 @@ function EditBookModal({ isOpen, onClose, book, onSave }) {
 			setSubmitting(false)
 		}
 	}
+
+	const categoryOptions = useMemo(() => (categories || []).filter(Boolean), [categories])
 
 	return (
 		<div className="modal-overlay" onClick={onClose}>
@@ -108,6 +125,31 @@ function EditBookModal({ isOpen, onClose, book, onSave }) {
 						accept="image/*"
 						onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
 					/>
+
+					<div className="form-field">
+						<label>Categories</label>
+						<div className="category-pills">
+							{categoryOptions.length ? (
+								categoryOptions.map((c) => (
+									<button
+										type="button"
+										key={c}
+										className={
+											form.categories?.includes(c)
+												? "pill pill-active"
+												: "pill"
+										}
+										onClick={() => toggleCategory(c)}
+										disabled={submitting}
+									>
+										{c}
+									</button>
+								))
+							) : (
+								<div className="muted">No categories yet</div>
+							)}
+						</div>
+					</div>
 
 				</div>
 

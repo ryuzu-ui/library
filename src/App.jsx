@@ -11,6 +11,7 @@ import Books from "./pages/Books"
 import Users from "./pages/Users"
 import MyBooks from "./pages/MyBooks"
 import Home from "./pages/Home"
+import BrowseBooks from "./pages/BrowseBooks"
 
 function App() {
 	return (
@@ -80,6 +81,15 @@ function App() {
 					element={
 						<UserLayout>
 							<MyBooks />
+						</UserLayout>
+					}
+				/>
+
+				<Route
+					path="/user/browse"
+					element={
+						<UserLayout>
+							<BrowseBooks />
 						</UserLayout>
 					}
 				/>

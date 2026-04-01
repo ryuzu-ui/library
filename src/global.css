@@ -1355,6 +1355,86 @@ button.primary {
 	text-align: center;
 }
 
+.filters-panel {
+	margin: 12px 0 16px;
+	background: rgba(255, 255, 255, 0.85);
+	border: 1px solid rgba(0,0,0,0.06);
+	border-radius: 14px;
+	padding: 12px;
+	box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+}
+
+.filters-row {
+	display: flex;
+	align-items: end;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.filter-field label {
+	display: block;
+	font-size: 12px;
+	color: #57605b;
+	margin-bottom: 6px;
+}
+
+.filter-field select {
+	padding: 10px 12px;
+	border-radius: 10px;
+	border: 1px solid rgba(0,0,0,0.12);
+	background: #fbfbfc;
+	font-size: 13px;
+	min-width: 180px;
+	outline: none;
+}
+
+.filter-field select:focus {
+	border-color: rgba(46, 125, 50, 0.55);
+	box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.14);
+}
+
+.filter-btn {
+	border-radius: 999px;
+	border: 1px solid rgba(0,0,0,0.12);
+	background: rgba(255,255,255,0.75);
+	padding: 8px 14px;
+}
+
+.filter-btn:hover {
+	background: rgba(255,255,255,0.95);
+}
+
+.book-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 6px 0 8px;
+}
+
+.tag {
+	font-size: 11px;
+	padding: 3px 8px;
+	border-radius: 999px;
+	background: rgba(46, 125, 50, 0.10);
+	border: 1px solid rgba(46, 125, 50, 0.20);
+	color: #1b5e20;
+}
+
+.form-field-full {
+	grid-column: 1 / -1;
+}
+
+.category-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.muted {
+	font-size: 12px;
+	color: #6a746f;
+}
+
 .book-card {
 	width: 100%;
 	background: rgba(255, 255, 255, 0.9);
