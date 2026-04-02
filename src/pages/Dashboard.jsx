@@ -1,4 +1,5 @@
-import { dashboardDummy } from "../data/dashboardDummy"
+import { useEffect, useMemo, useState } from "react"
+import { supabase } from "../lib/supabaseClient"
 
 function formatValue(kpi) {
 	if (kpi.format === "currency") {
@@ -31,8 +32,189 @@ function createPath(values, width, height, padding) {
 }
 
 function Dashboard() {
-	const { kpis, checkoutStatistics, overdueHistory, recentCheckouts, topBooks } =
-		dashboardDummy
+	const [loading, setLoading] = useState(false)
+	const [error, setError] = useState("")
+	const [kpis, setKpis] = useState([])
+	const [checkoutStatistics, setCheckoutStatistics] = useState({
+		labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+		series: { borrowed: [0, 0, 0, 0, 0, 0, 0], returned: [0, 0, 0, 0, 0, 0, 0] },
+	})
+	const [overdueHistory, setOverdueHistory] = useState([])
+	const [recentCheckouts, setRecentCheckouts] = useState([])
+	const [topBooks, setTopBooks] = useState([])
+
+	useEffect(() => {
+		let active = true
+		const load = async () => {
+			setError("")
+			setLoading(true)
+			try {
+				const now = new Date()
+				const nowMs = now.getTime()
+				const dayMs = 24 * 60 * 60 * 1000
+
+				const last7Dates = []
+				const labels = []
+				for (let i = 6; i >= 0; i -= 1) {
+					const d = new Date(nowMs - i * dayMs)
+					last7Dates.push(d)
+					labels.push(d.toLocaleDateString(undefined, { weekday: "short" }))
+				}
+
+				const [{ count: booksCount, error: booksCountError }, { data: loans, error: loansError }] =
+					await Promise.all([
+						supabase.from("books").select("id", { count: "exact", head: true }),
+						supabase
+							.from("loans")
+							.select(
+								"id, user_id, checked_out_at, due_at, returned_at, copy_id, copies:copy_id(id, books(id, title, book_authors(authors(name))))"
+							)
+							.order("checked_out_at", { ascending: false })
+							.limit(300),
+					])
+
+				if (booksCountError) throw new Error(booksCountError.message)
+				if (loansError) throw new Error(loansError.message)
+
+				const allLoans = loans || []
+				const activeLoans = allLoans.filter((l) => !l?.returned_at)
+				const returnedLoans = allLoans.filter((l) => !!l?.returned_at)
+				const overdueLoans = activeLoans.filter((l) => {
+					if (!l?.due_at) return false
+					const dueMs = new Date(l.due_at).getTime()
+					return !Number.isNaN(dueMs) && dueMs < nowMs
+				})
+
+				const uniqueUserIds = Array.from(
+					new Set(allLoans.map((l) => l?.user_id).filter(Boolean))
+				)
+				let profilesById = {}
+				if (uniqueUserIds.length) {
+					const { data: profiles, error: profilesError } = await supabase
+						.from("profiles")
+						.select("id, full_name")
+						.in("id", uniqueUserIds)
+					if (profilesError) {
+						profilesById = {}
+					} else {
+						profilesById = Object.fromEntries(
+							(profiles || []).map((p) => [p.id, p])
+						)
+					}
+				}
+
+				const borrowedSeries = []
+				const returnedSeries = []
+				for (const d of last7Dates) {
+					const start = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+					const end = start + dayMs
+					borrowedSeries.push(
+						allLoans.filter((l) => {
+							if (!l?.checked_out_at) return false
+							const t = new Date(l.checked_out_at).getTime()
+							return !Number.isNaN(t) && t >= start && t < end
+						}).length
+					)
+					returnedSeries.push(
+						allLoans.filter((l) => {
+							if (!l?.returned_at) return false
+							const t = new Date(l.returned_at).getTime()
+							return !Number.isNaN(t) && t >= start && t < end
+						}).length
+					)
+				}
+
+				const topBookCounts = new Map()
+				for (const l of allLoans) {
+					const b = l?.copies?.books
+					if (!b?.id) continue
+					const key = b.id
+					topBookCounts.set(key, {
+						id: b.id,
+						title: b.title,
+						author:
+							(b.book_authors || [])
+								.map((ba) => ba?.authors?.name)
+								.filter(Boolean)
+								.join(", ") || "Unknown",
+						count: (topBookCounts.get(key)?.count || 0) + 1,
+					})
+				}
+				const topBooksArr = Array.from(topBookCounts.values())
+					.sort((a, b) => b.count - a.count)
+					.slice(0, 5)
+					.map((b) => ({
+						title: b.title,
+						author: b.author,
+						status: `${b.count} loans`,
+					}))
+
+				const overdueRows = overdueLoans.slice(0, 10).map((l) => {
+					const title = l?.copies?.books?.title || "Unknown"
+					const memberName =
+						profilesById?.[l.user_id]?.full_name ||
+						String(l.user_id || "-").slice(0, 8)
+					const dueDate = l?.due_at ? new Date(l.due_at).toLocaleDateString() : "-"
+					return {
+						memberId: memberName,
+						title,
+						isbn: "-",
+						dueDate,
+						fine: "-",
+					}
+				})
+
+				const recentRows = allLoans.slice(0, 12).map((l) => {
+					const b = l?.copies?.books
+					const author =
+						(b?.book_authors || [])
+							.map((ba) => ba?.authors?.name)
+							.filter(Boolean)
+							.join(", ") || "Unknown"
+					const memberName =
+						profilesById?.[l.user_id]?.full_name ||
+						String(l.user_id || "-").slice(0, 8)
+					return {
+						id: `#L-${l.id}`,
+						isbn: "-",
+						title: b?.title || "Unknown",
+						author,
+						member: memberName,
+						issuedDate: l?.checked_out_at
+							? new Date(l.checked_out_at).toLocaleDateString()
+							: "-",
+						returnDate: l?.returned_at
+							? new Date(l.returned_at).toLocaleDateString()
+							: "-",
+					}
+				})
+
+				const nextKpis = [
+					{ id: "totalBooks", label: "Total Books", value: booksCount || 0, delta: 0, deltaType: "up" },
+					{ id: "activeLoans", label: "Borrowed Books", value: activeLoans.length, delta: 0, deltaType: "up" },
+					{ id: "returned", label: "Returned Books", value: returnedLoans.length, delta: 0, deltaType: "up" },
+					{ id: "overdue", label: "Overdue Books", value: overdueLoans.length, delta: 0, deltaType: "down" },
+				]
+
+				if (!active) return
+				setKpis(nextKpis)
+				setCheckoutStatistics({ labels, series: { borrowed: borrowedSeries, returned: returnedSeries } })
+				setOverdueHistory(overdueRows)
+				setRecentCheckouts(recentRows)
+				setTopBooks(topBooksArr)
+			} catch (e) {
+				if (!active) return
+				setError(e?.message || "Unable to load dashboard")
+			} finally {
+				if (active) setLoading(false)
+			}
+		}
+
+		void load()
+		return () => {
+			active = false
+		}
+	}, [])
 
 	const chartW = 560
 	const chartH = 220
@@ -52,6 +234,10 @@ function Dashboard() {
 
 	return (
 		<div className="dashboard">
+			{error ? <p className="login-error">{error}</p> : null}
+			{loading ? (
+				<div style={{ padding: 10, color: "#666" }}>Loading dashboard...</div>
+			) : null}
 			<div className="kpi-grid">
 				{kpis.map((kpi) => {
 					const deltaClass = kpi.deltaType === "down" ? "red" : "green"
