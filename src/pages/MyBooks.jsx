@@ -1,17 +1,24 @@
-import { useEffect, useMemo, useState } from "react"
+	import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import BookDetailsModal from "./BookDetailsModal"
 import { supabase } from "../lib/supabaseClient"
 
 function MyBooks() {
+	const [searchParams] = useSearchParams()
 
 	const [selectedBook, setSelectedBook] = useState(null)
-	const [search, setSearch] = useState("")
+	const [searchTerm, setSearchTerm] = useState("")
 	const [filtersOpen, setFiltersOpen] = useState(false)
 	const [authorFilter, setAuthorFilter] = useState("")
 	const [categoryFilter, setCategoryFilter] = useState("")
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState("")
 	const [books, setBooks] = useState([])
+
+	useEffect(() => {
+		const q = searchParams.get("q") || ""
+		setSearchTerm(q)
+	}, [searchParams])
 
 	const placeholderCover =
 		"https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=600&q=60"
@@ -110,7 +117,7 @@ function MyBooks() {
 	}, [books])
 
 	const filteredBooks = useMemo(() => {
-		const q = search.trim().toLowerCase()
+		const q = searchTerm.trim().toLowerCase()
 		return books.filter((b) => {
 			const hay = `${b.name} ${b.author}`.toLowerCase()
 			if (q && !hay.includes(q)) return false
@@ -121,7 +128,7 @@ function MyBooks() {
 			}
 			return true
 		})
-	}, [books, search, authorFilter, categoryFilter])
+	}, [books, searchTerm, authorFilter, categoryFilter])
 
 	return (
 		<div className="page">
@@ -136,8 +143,8 @@ function MyBooks() {
 				<div className="page-actions">
 					<input
 						placeholder="Search my books..."
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
 					/>
 					<button
 						className="btn filter-btn"

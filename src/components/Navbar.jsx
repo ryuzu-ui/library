@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { supabase } from "../lib/supabaseClient"
 
 function Navbar({ toggleSidebar }) {
 	const navigate = useNavigate()
+	const location = useLocation()
 	const popoverRef = useRef(null)
 	const [profileOpen, setProfileOpen] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState("")
 	const [user, setUser] = useState(null)
 	const [profile, setProfile] = useState(null)
+	const [searchValue, setSearchValue] = useState("")
 
 	useEffect(() => {
 		let active = true
@@ -50,6 +52,36 @@ function Navbar({ toggleSidebar }) {
 			active = false
 		}
 	}, [])
+
+	useEffect(() => {
+		const params = new URLSearchParams(location.search || "")
+		const q = params.get("q") || ""
+		setSearchValue(q)
+	}, [location.search])
+
+	useEffect(() => {
+		const isUser =
+			location.pathname.startsWith("/user") ||
+			location.pathname.startsWith("/my-books") ||
+			location.pathname.startsWith("/profile")
+		const target = isUser ? "/user/browse" : "/books"
+
+		const q = String(searchValue || "").trim()
+		const params = new URLSearchParams(location.search || "")
+		const currentQ = params.get("q") || ""
+
+		if (q === currentQ) return
+
+		const t = window.setTimeout(() => {
+			if (!q) {
+				navigate(target)
+				return
+			}
+			navigate(`${target}?q=${encodeURIComponent(q)}`)
+		}, 250)
+
+		return () => window.clearTimeout(t)
+	}, [searchValue, location.pathname, location.search, navigate])
 
 	useEffect(() => {
 		if (!profileOpen) return
@@ -116,7 +148,23 @@ function Navbar({ toggleSidebar }) {
 			<div className="topbar-center">
 				<input
 					className="search"
-					placeholder="Search Ex. ISBN, Title, Author, Member, etc"
+					placeholder="Search books by title / author"
+					value={searchValue}
+					onChange={(e) => setSearchValue(e.target.value)}
+					onKeyDown={(e) => {
+						if (e.key !== "Enter") return
+						const q = String(searchValue || "").trim()
+						const isUser =
+							location.pathname.startsWith("/user") ||
+							location.pathname.startsWith("/my-books") ||
+							location.pathname.startsWith("/profile")
+						const target = isUser ? "/user/browse" : "/books"
+						if (!q) {
+							navigate(target)
+							return
+						}
+						navigate(`${target}?q=${encodeURIComponent(q)}`)
+					}}
 				/>
 			</div>
 

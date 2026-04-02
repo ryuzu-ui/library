@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from "react"
+	import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import BookDetailsModal from "./BookDetailsModal"
 import AddBookModal from "./AddBookModal"
 import EditBookModal from "./EditBookModal"
 import { supabase } from "../lib/supabaseClient"
 
-
 function Books() {
+	const [searchParams] = useSearchParams()
 
 	const [selectedBook, setSelectedBook] = useState(null)
 	const [addOpen, setAddOpen] = useState(false)
@@ -13,6 +14,7 @@ function Books() {
 	const [editBook, setEditBook] = useState(null)
 	const [search, setSearch] = useState("")
 	const [filtersOpen, setFiltersOpen] = useState(false)
+
 	const [authorFilter, setAuthorFilter] = useState("")
 	const [categoryFilter, setCategoryFilter] = useState("")
 	const [loading, setLoading] = useState(false)
@@ -86,6 +88,11 @@ function Books() {
 		void loadBooks()
 		void loadCategories()
 	}, [])
+
+	useEffect(() => {
+		const q = searchParams.get("q") || ""
+		setSearch(q)
+	}, [searchParams])
 
 	const authorOptions = useMemo(() => {
 		const set = new Set()

@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import BookDetailsModal from "./BookDetailsModal"
 import { supabase } from "../lib/supabaseClient"
 
 function BrowseBooks() {
+	const [searchParams] = useSearchParams()
 	const [selectedBook, setSelectedBook] = useState(null)
-	const [search, setSearch] = useState("")
+	const [searchTerm, setSearchTerm] = useState("")
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState("")
+
+	useEffect(() => {
+		const q = searchParams.get("q") || ""
+		setSearchTerm(q)
+	}, [searchParams])
 
 	const [books, setBooks] = useState([])
 	const [filtersOpen, setFiltersOpen] = useState(false)
@@ -79,7 +86,7 @@ function BrowseBooks() {
 	}, [books])
 
 	const filteredBooks = useMemo(() => {
-		const q = search.trim().toLowerCase()
+		const q = searchTerm.trim().toLowerCase()
 		return books.filter((b) => {
 			const hay = `${b.name} ${b.author}`.toLowerCase()
 			if (q && !hay.includes(q)) return false
@@ -90,7 +97,7 @@ function BrowseBooks() {
 			}
 			return true
 		})
-	}, [books, search, authorFilter, categoryFilter])
+	}, [books, searchTerm, authorFilter, categoryFilter])
 
 	return (
 		<div className="page">
@@ -103,8 +110,8 @@ function BrowseBooks() {
 				<div className="page-actions">
 					<input
 						placeholder="Search books..."
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
 					/>
 					<button
 						className="btn filter-btn"
