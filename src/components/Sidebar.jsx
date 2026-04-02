@@ -13,10 +13,9 @@ function Sidebar({ isOpen, role, toggleSidebar, onNavigate }) {
 
 	const userMenu = [
 		{ name: "Home", path: "/user/home" },
+		{ name: "Dashboard", path: "/user/dashboard" },
 		{ name: "Browse Books", path: "/user/browse" },
 		{ name: "My Books", path: "/my-books" },
-		{ name: "Dashboard", path: "/user/dashboard" },
-		{ name: "Profile", path: "/profile" },
 	]
 
 	const menu = role === "admin" ? adminMenu : userMenu

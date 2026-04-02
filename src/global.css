@@ -12,6 +12,22 @@ body {
 	overflow-x: hidden;
 }
 
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+:root {
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+	--shadow-soft: 0 10px 24px rgba(0,0,0,0.06);
+	--shadow-hover: 0 16px 34px rgba(0,0,0,0.10);
+}
+
 /* LAYOUT */
 .app {
 	display: flex;
@@ -90,6 +106,11 @@ html, body, #root {
 	margin-bottom: 5px;
 	cursor: pointer;
 	color: #555;
+	transition: background 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+
+.sidebar li:hover {
+	background: #f0f0f0;
 }
 
 .sidebar li.active {
@@ -97,15 +118,12 @@ html, body, #root {
 	color: white;
 }
 
-.sidebar li:hover {
-	background: #f0f0f0;
-}
-
 .menu-link {
 	display: block;
 	text-decoration: none;
 	color: inherit;
 	width: 100%;
+	transition: color 140ms var(--ease-out), background 140ms var(--ease-out), transform 140ms var(--ease-out);
 }
 
 .menu-link.active {
@@ -155,6 +173,7 @@ html, body, #root {
 	margin-bottom: 5px;
 	cursor: pointer;
 	color: #555;
+	transition: background 140ms var(--ease-out), color 140ms var(--ease-out);
 }
 
 .menu li:hover {
@@ -221,6 +240,17 @@ html, body, #root {
 	gap: 8px;
 }
 
+.user-btn {
+	background: transparent;
+	border: 1px solid rgba(0,0,0,0.08);
+	border-radius: 999px;
+	padding: 6px 10px;
+}
+
+.user-btn:hover {
+	background: rgba(0,0,0,0.03);
+}
+
 .avatar {
 	width: 28px;
 	height: 28px;
@@ -231,6 +261,14 @@ html, body, #root {
 	justify-content: center;
 	font-weight: 600;
 	font-size: 12px;
+	overflow: hidden;
+}
+
+.avatar-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
 }
 
 .user-name {
@@ -261,10 +299,17 @@ html, body, #root {
 	display: grid;
 	grid-template-columns: repeat(4, 1fr);
 	gap: 15px;
+	margin-bottom: 20px;
 }
 
 .kpi-card {
 	padding: 16px;
+	transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+.kpi-card:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 10px 22px rgba(0,0,0,0.08);
 }
 
 .kpi-label {
@@ -338,6 +383,12 @@ html, body, #root {
 	background: #fafafa;
 	border: 1px solid #f0f0f0;
 	padding: 10px;
+	transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+.chart-wrap:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 10px 22px rgba(0,0,0,0.08);
 }
 
 .line-chart {
@@ -391,6 +442,11 @@ html, body, #root {
 	color: #4caf50;
 	font-size: 12px;
 	cursor: pointer;
+	transition: color 140ms var(--ease-out), transform 140ms var(--ease-out);
+}
+
+.link-btn:hover {
+	transform: translateY(-1px);
 }
 
 .right {
@@ -410,6 +466,15 @@ html, body, #root {
 	border-radius: 999px;
 	font-size: 12px;
 	color: #666;
+	transition: transform 140ms var(--ease-out), background 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+
+.pill:hover {
+	transform: translateY(-1px);
+}
+
+.pill:active {
+	transform: translateY(1px) scale(0.99);
 }
 
 .pill-active {
@@ -490,6 +555,12 @@ html, body, #root {
 	padding: 15px;
 	border-radius: 12px;
 	box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+	transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+.card:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 10px 22px rgba(0,0,0,0.08);
 }
 
 .card h4 {
@@ -533,6 +604,12 @@ html, body, #root {
 	padding: 15px;
 	border-radius: 12px;
 	box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+	transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+.box:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 10px 22px rgba(0,0,0,0.08);
 }
 
 .box h3 {
@@ -545,18 +622,52 @@ table {
 	width: 100%;
 	border-collapse: collapse;
 	font-size: 13px;
+	background: transparent;
 }
 
 th {
 	text-align: left;
 	color: #888;
 	font-weight: 500;
-	padding-bottom: 8px;
+	padding: 12px 12px;
+	white-space: nowrap;
 }
 
 td {
-	padding: 8px 0;
-	border-bottom: 1px solid #eee;
+	padding: 12px 12px;
+	border-bottom: 1px solid rgba(0,0,0,0.06);
+	vertical-align: middle;
+	transition: background 140ms var(--ease-out);
+}
+
+table thead th {
+	background: rgba(245, 246, 248, 0.8);
+	border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+table tbody tr:hover td {
+	background: rgba(76, 175, 80, 0.05);
+}
+
+table tbody tr:nth-child(even) td {
+	background: rgba(255, 255, 255, 0.55);
+}
+
+.table-wrap {
+	border: 1px solid rgba(0,0,0,0.06);
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.85);
+	overflow: auto;
+}
+
+.table-wrap table {
+	min-width: 640px;
+}
+
+.table-wrap thead th {
+	position: sticky;
+	top: 0;
+	z-index: 1;
 }
 
 /* FULL WIDTH TABLE */
@@ -579,11 +690,25 @@ button {
 	border: none;
 	border-radius: 8px;
 	cursor: pointer;
+	transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+}
+
+button:active {
+	transform: translateY(1px) scale(0.99);
+}
+
+button:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.18);
 }
 
 button.primary {
 	background: #4caf50;
 	color: white;
+}
+
+button.primary:hover {
+	background: #43a047;
 }
 
 /* LOGOUT */
@@ -835,6 +960,13 @@ button.primary:hover {
 	font-size: 13px;
 	border: 1px solid #ececec;
 	cursor: pointer;
+	transition: background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+}
+
+.auth-tab:hover {
+	background: #e6f7ec;
+	border-color: rgba(76, 175, 80, 0.25);
+	color: #1b5e20;
 }
 
 .auth-tab-active {
@@ -957,6 +1089,11 @@ button.primary:hover {
 .books-table td {
 	padding: 10px 0;
 	border-bottom: 1px solid #eee;
+	transition: background 140ms var(--ease-out);
+}
+
+.books-table tbody tr:hover td {
+	background: rgba(76, 175, 80, 0.05);
 }
 
 /* ACTION BUTTONS */
@@ -980,10 +1117,20 @@ button.primary {
 	border-radius: 8px;
 	border: none;
 	cursor: pointer;
+	transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
 }
 
 button.primary:hover {
 	background: #43a047;
+}
+
+button.primary:active {
+	transform: translateY(1px) scale(0.99);
+}
+
+button.primary:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.18);
 }
 
 /* USERS PAGE */
@@ -1042,6 +1189,7 @@ button.primary:hover {
 .users-table td {
 	padding: 10px 0;
 	border-bottom: 1px solid #eee;
+	transition: background 140ms var(--ease-out);
 }
 
 .users-header {
@@ -1072,6 +1220,7 @@ button.primary:hover {
 	background: white;
 	cursor: pointer;
 	font-size: 12px;
+	transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
 }
 
 .btn.delete {
@@ -1146,6 +1295,11 @@ button.primary:hover {
 .table td {
 	padding: 10px 0;
 	border-bottom: 1px solid #eee;
+	transition: background 140ms var(--ease-out);
+}
+
+.table tbody tr:hover td {
+	background: rgba(76, 175, 80, 0.05);
 }
 
 /* BUTTONS */
@@ -1156,6 +1310,7 @@ button.primary:hover {
 	background: white;
 	cursor: pointer;
 	font-size: 12px;
+	transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
 }
 
 .btn.delete {
@@ -1196,6 +1351,20 @@ button.primary {
 	color: white;
 	border: none;
 	cursor: pointer;
+	transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+}
+
+button.primary:hover {
+	background: #43a047;
+}
+
+button.primary:active {
+	transform: translateY(1px) scale(0.99);
+}
+
+button.primary:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.18);
 }
 
 /* TABLE SPACING FIX */
@@ -1217,6 +1386,12 @@ button.primary {
 	align-items: center;
 	justify-content: center;
 	z-index: 1000;
+	animation: overlayFadeIn 160ms var(--ease-out);
+}
+
+@keyframes overlayFadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
 }
 
 .modal {
@@ -1224,8 +1399,15 @@ button.primary {
 	padding: 32px 28px;
 	width: 380px;
 	border-radius: 8px;
-	text-align: left; /* ✅ FIXED: was "center" */
+	text-align: left;
 	box-shadow: 0 6px 25px rgba(0,0,0,0.15);
+	transform-origin: center;
+	animation: modalPopIn 180ms var(--ease-out);
+}
+
+@keyframes modalPopIn {
+	from { opacity: 0; transform: translateY(8px) scale(0.98); }
+	to { opacity: 1; transform: translateY(0px) scale(1); }
 }
 
 .modal h3 {
@@ -1265,6 +1447,20 @@ button.primary {
 	border-radius: 5px;
 	font-size: 15px;
 	cursor: pointer;
+	transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
+}
+
+.modal-actions .confirm:hover {
+	background: #43a047;
+}
+
+.modal-actions .confirm:active {
+	transform: translateY(1px) scale(0.99);
+}
+
+.modal-actions .confirm:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.18);
 }
 
 .modal-actions .cancel {
@@ -1275,6 +1471,7 @@ button.primary {
 	border-radius: 5px;
 	font-size: 15px;
 	cursor: pointer;
+	transition: transform 140ms var(--ease-out), box-shadow 140ms var(--ease-out), background 140ms var(--ease-out), color 140ms var(--ease-out), border-color 140ms var(--ease-out);
 }
 
 .books-grid {
@@ -1327,6 +1524,7 @@ button.primary {
 	font-size: 13px;
 	min-width: 180px;
 	outline: none;
+	transition: border-color 140ms var(--ease-out), box-shadow 140ms var(--ease-out);
 }
 
 .filter-field select:focus {
@@ -1339,6 +1537,7 @@ button.primary {
 	border: 1px solid rgba(0,0,0,0.12);
 	background: rgba(255,255,255,0.75);
 	padding: 8px 14px;
+	transition: background 140ms var(--ease-out);
 }
 
 .filter-btn:hover {
@@ -1382,24 +1581,37 @@ button.primary {
 	border: 1px solid rgba(0,0,0,0.06);
 	border-radius: 14px;
 	overflow: hidden;
-	box-shadow: 0 10px 24px rgba(0,0,0,0.06);
-	transition: transform 0.18s ease, box-shadow 0.18s ease;
+	box-shadow: var(--shadow-soft);
+	transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out), border-color 180ms var(--ease-out);
 	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 }
 
 .book-card:hover {
 	transform: translateY(-3px);
-	box-shadow: 0 16px 34px rgba(0,0,0,0.10);
+	box-shadow: var(--shadow-hover);
+	border-color: rgba(46, 125, 50, 0.20);
+}
+
+.book-card:active {
+	transform: translateY(-1px) scale(0.99);
 }
 
 .book-card img {
 	width: 100%;
 	height: 240px;
 	object-fit: cover;
+	background: #f2f3f5;
 }
 
 .book-info {
 	padding: 12px 12px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1;
 }
 
 .book-info h4 {
@@ -1407,12 +1619,24 @@ button.primary {
 	font-weight: 700;
 	color: #1f2a24;
 	margin-bottom: 4px;
+	display: -webkit-box;
+	line-clamp: 2;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	box-orient: vertical;
+	overflow: hidden;
 }
 
 .book-info p {
 	font-size: 12px;
 	color: #5b6761;
 	margin-bottom: 6px;
+	display: -webkit-box;
+	line-clamp: 1;
+	-webkit-line-clamp: 1;
+	-webkit-box-orient: vertical;
+	box-orient: vertical;
+	overflow: hidden;
 }
 
 .book-info span {
@@ -1688,6 +1912,107 @@ button.primary {
 	gap: 20px;
 	overflow-x: auto;
 	padding-bottom: 10px;
+	align-items: stretch;
+	scroll-snap-type: x mandatory;
+}
+
+.home-row .book-card {
+	min-width: 210px;
+	max-width: 240px;
+	flex: 0 0 auto;
+	scroll-snap-align: start;
+}
+
+/* PROFILE POPOVER (FINAL OVERRIDE) */
+.topbar,
+.topbar-right {
+	overflow: visible;
+}
+
+.topbar .profile-popover {
+	position: relative;
+}
+
+.topbar .profile-card-popover {
+	position: absolute;
+	right: 0;
+	top: calc(100% + 10px);
+	width: min(340px, calc(100vw - 20px));
+	background: rgba(255, 255, 255, 0.98);
+	border: 1px solid rgba(0,0,0,0.10);
+	border-radius: 16px;
+	box-shadow: 0 18px 50px rgba(0,0,0,0.12);
+	padding: 14px;
+	z-index: 5000;
+}
+
+.topbar .profile-card-header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.topbar .profile-card-avatar {
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	background: #e6f7ec;
+	border: 1px solid rgba(46, 125, 50, 0.18);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 800;
+	color: #1b5e20;
+	overflow: hidden;
+	flex: 0 0 auto;
+}
+
+.topbar .profile-card-header-text {
+	min-width: 0;
+}
+
+.topbar .profile-card-title {
+	font-size: 11px;
+	letter-spacing: 0.3px;
+	text-transform: uppercase;
+	color: #667;
+}
+
+.topbar .profile-card-name {
+	margin-top: 4px;
+	font-size: 15px;
+	font-weight: 800;
+	color: #1f2a24;
+	line-height: 1.2;
+}
+
+.topbar .profile-card-email {
+	margin-top: 2px;
+	font-size: 12px;
+	color: #566;
+	max-width: 260px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.topbar .profile-card-meta {
+	margin-top: 10px;
+	font-size: 12px;
+	color: #6a746f;
+	padding-top: 10px;
+	border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.topbar .profile-card-actions {
+	margin-top: 12px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.topbar .profile-card-actions .btn {
+	width: 100%;
 }
 
 .app.modal-open .main {
