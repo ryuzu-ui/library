@@ -63,14 +63,14 @@ function Home() {
 
 	const renderRow = (title, books) => (
 		<div className="home-section">
-			<h3>{title}</h3>
+			<h3 style={{ color: "var(--text-primary)" }}>{title}</h3>
 
 			<div className="home-row">
 				{!books.length ? (
 					<div className="books-empty">No books found.</div>
 				) : null}
 				{books.map((book, i) => (
-					<div 
+					<div
 						className="book-card"
 						key={i}
 						onClick={() => setSelectedBook(book)}
@@ -91,10 +91,10 @@ function Home() {
 	return (
 		<div className="page">
 
-			<h2>Home</h2>
+			<h2 style={{ color: "var(--text-primary)" }}>Home</h2>
 			{error ? <p className="login-error">{error}</p> : null}
 			{loading ? (
-				<div style={{ padding: 10, color: "#666" }}>Loading books...</div>
+				<div style={{ padding: 10, color: "var(--text-muted)" }}>Loading books...</div>
 			) : null}
 
 			{renderRow("New Releases", newReleases)}
