@@ -67,7 +67,7 @@ function Dashboard() {
 						supabase
 							.from("loans")
 							.select(
-								"id, user_id, checked_out_at, due_at, returned_at, copy_id, copies:copy_id(id, books(id, title, book_authors(authors(name))))"
+								"id, user_id, checked_out_at, due_at, returned_at, copy_id, book_copies:copy_id(id, books(id, title, book_authors(authors(name))))"
 							)
 							.order("checked_out_at", { ascending: false })
 							.limit(300),
@@ -126,7 +126,7 @@ function Dashboard() {
 
 				const topBookCounts = new Map()
 				for (const l of allLoans) {
-					const b = l?.copies?.books
+					const b = l?.book_copies?.books
 					if (!b?.id) continue
 					const key = b.id
 					topBookCounts.set(key, {
@@ -150,7 +150,7 @@ function Dashboard() {
 					}))
 
 				const overdueRows = overdueLoans.slice(0, 10).map((l) => {
-					const title = l?.copies?.books?.title || "Unknown"
+					const title = l?.book_copies?.books?.title || "Unknown"
 					const memberName =
 						profilesById?.[l.user_id]?.full_name ||
 						String(l.user_id || "-").slice(0, 8)
@@ -165,7 +165,7 @@ function Dashboard() {
 				})
 
 				const recentRows = allLoans.slice(0, 12).map((l) => {
-					const b = l?.copies?.books
+					const b = l?.book_copies?.books
 					const author =
 						(b?.book_authors || [])
 							.map((ba) => ba?.authors?.name)

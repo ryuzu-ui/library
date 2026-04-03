@@ -207,6 +207,25 @@ function Books() {
 
 			if (upsertBookError) throw new Error(upsertBookError.message)
 
+			const { data: existingCopy, error: existingCopyError } = await supabase
+				.from("book_copies")
+				.select("id")
+				.eq("book_id", upsertedBook.id)
+				.limit(1)
+				.maybeSingle()
+			if (existingCopyError) throw new Error(existingCopyError.message)
+			if (!existingCopy) {
+				const barcodeBase =
+					typeof crypto !== "undefined" && crypto.randomUUID
+						? crypto.randomUUID()
+						: `${Date.now()}-${Math.random().toString(16).slice(2)}`
+				const barcode = `BC-${upsertedBook.id}-${barcodeBase}`
+				const { error: createCopyError } = await supabase
+					.from("book_copies")
+					.insert({ book_id: upsertedBook.id, barcode })
+				if (createCopyError) throw new Error(createCopyError.message)
+			}
+
 			if (authorName) {
 				const { data: authorRow, error: authorError } = await supabase
 					.from("authors")
@@ -497,7 +516,7 @@ function Books() {
 		setLoading(true)
 		try {
 			const { data: copies, error: copiesError } = await supabase
-				.from("copies")
+				.from("book_copies")
 				.select("id")
 				.eq("book_id", book.id)
 			if (copiesError) throw new Error(copiesError.message)
@@ -516,7 +535,7 @@ function Books() {
 
 			await supabase.from("book_categories").delete().eq("book_id", book.id)
 			await supabase.from("book_authors").delete().eq("book_id", book.id)
-			await supabase.from("copies").delete().eq("book_id", book.id)
+			await supabase.from("book_copies").delete().eq("book_id", book.id)
 
 			const { error: deleteError } = await supabase
 				.from("books")

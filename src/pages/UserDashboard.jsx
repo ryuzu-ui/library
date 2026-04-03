@@ -93,7 +93,7 @@ function UserDashboard() {
 				const { data, error: loansError } = await supabase
 					.from("loans")
 					.select(
-						"id, checked_out_at, due_at, returned_at, copy_id, copies:copy_id(id, books(title))"
+						"id, checked_out_at, due_at, returned_at, copy_id, book_copies:copy_id(id, books(title))"
 					)
 					.eq("user_id", user.id)
 					.order("checked_out_at", { ascending: false })
@@ -163,7 +163,7 @@ function UserDashboard() {
 				})
 
 				const recent = loans.slice(0, 10).map((l) => {
-					const title = l?.copies?.books?.title || "Unknown"
+					const title = l?.book_copies?.books?.title || "Unknown"
 					const action = l?.returned_at ? "Returned" : "Borrowed"
 					const actionDate = l?.returned_at
 						? new Date(l.returned_at).toLocaleDateString()

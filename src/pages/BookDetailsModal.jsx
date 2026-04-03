@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom"
 import { useEffect } from "react"
 
-function BookDetailsModal({ isOpen, onClose, book, role, onBorrow, onEdit, onDelete }) {
+function BookDetailsModal({ isOpen, onClose, book, role, onBorrow, onReturn, onEdit, onDelete }) {
 	const noCoverSvg =
 		"data:image/svg+xml;charset=UTF-8," +
 		encodeURIComponent(
@@ -78,13 +78,23 @@ function BookDetailsModal({ isOpen, onClose, book, role, onBorrow, onEdit, onDel
 								</>
 							)}
 
-							{role === "user" && onBorrow && (
+							{role === "user" && onBorrow && !book?.loanId && (
 								<button
 									type="button"
 									className="primary"
 									onClick={() => onBorrow(book)}
 								>
 									Borrow Book
+								</button>
+							)}
+
+							{role === "user" && book?.loanId && onReturn && (
+								<button
+									type="button"
+									className="primary"
+									onClick={() => onReturn(book)}
+								>
+									Return Book
 								</button>
 							)}
 

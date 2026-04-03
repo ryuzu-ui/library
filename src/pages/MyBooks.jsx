@@ -4,6 +4,7 @@ import BookDetailsModal from "./BookDetailsModal"
 import { supabase } from "../lib/supabaseClient"
 
 function MyBooks() {
+
 	const [searchParams] = useSearchParams()
 
 	const [selectedBook, setSelectedBook] = useState(null)
@@ -20,8 +21,24 @@ function MyBooks() {
 		setSearchTerm(q)
 	}, [searchParams])
 
-	const placeholderCover =
-		"https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=600&q=60"
+	const noCoverSvg =
+		"data:image/svg+xml;charset=UTF-8," +
+		encodeURIComponent(
+			`<svg xmlns='http://www.w3.org/2000/svg' width='600' height='900' viewBox='0 0 600 900'>
+				<defs>
+					<linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
+						<stop offset='0' stop-color='#f3f5f7'/>
+						<stop offset='1' stop-color='#e7eaee'/>
+					</linearGradient>
+				</defs>
+				<rect width='600' height='900' rx='28' fill='url(#g)'/>
+				<rect x='55' y='70' width='490' height='760' rx='22' fill='rgba(0,0,0,0.03)' stroke='rgba(0,0,0,0.08)' stroke-width='4'/>
+				<path d='M210 390c0-49 40-89 90-89s90 40 90 89-40 89-90 89-90-40-90-89z' fill='rgba(46,125,50,0.12)'/>
+				<path d='M245 390c0-30 25-55 55-55s55 25 55 55-25 55-55 55-55-25-55-55z' fill='rgba(46,125,50,0.20)'/>
+				<text x='300' y='560' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='28' font-weight='800' fill='rgba(0,0,0,0.60)'>No cover set</text>
+				<text x='300' y='606' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='16' font-weight='600' fill='rgba(0,0,0,0.40)'>Upload a cover or paste an image URL</text>
+			</svg>`
+		)
 
 	const formatDue = (dueAt) => {
 		if (!dueAt) return ""
@@ -52,7 +69,7 @@ function MyBooks() {
 			const { data, error: loansError } = await supabase
 				.from("loans")
 				.select(
-					"id, due_at, checked_out_at, copy_id, copies:copy_id(id, book_id, books(id, title, publication_year, cover_url, book_authors(authors(name)), book_categories(categories(name))))"
+					"id, due_at, checked_out_at, returned_at, copy_id, book_copies:copy_id(id, book_id, books(id, title, publication_year, cover_url, book_authors(authors(name)), book_categories(categories(name))))"
 				)
 				.eq("user_id", user.id)
 				.order("checked_out_at", { ascending: false })
@@ -61,7 +78,7 @@ function MyBooks() {
 
 			const mapped = (data || [])
 				.map((loan) => {
-					const book = loan?.copies?.books
+					const book = loan?.book_copies?.books
 					if (!book) return null
 
 					const authorNames = (book.book_authors || [])
@@ -79,11 +96,13 @@ function MyBooks() {
 						name: book.title,
 						author,
 						date: formatDue(loan.due_at),
-						image: book.cover_url || placeholderCover,
+						image: book.cover_url || "",
+
 						publicationYear: book.publication_year ?? null,
 						coverUrl: book.cover_url ?? "",
 						categories: categoryNames,
 						dueAt: loan.due_at || null,
+						returnedAt: loan.returned_at || null,
 					}
 				})
 				.filter(Boolean)
@@ -99,6 +118,35 @@ function MyBooks() {
 	useEffect(() => {
 		void loadMyLoans()
 	}, [])
+
+	const handleReturn = async (book) => {
+		if (!book?.loanId) return
+		setError("")
+		setLoading(true)
+		try {
+			const {
+				data: { user },
+				error: userError,
+			} = await supabase.auth.getUser()
+			if (userError) throw new Error(userError.message)
+			if (!user) throw new Error("You must be logged in")
+
+			const { error: updateError } = await supabase
+				.from("loans")
+				.update({ returned_at: new Date().toISOString() })
+				.eq("id", book.loanId)
+				.eq("user_id", user.id)
+				.is("returned_at", null)
+			if (updateError) throw new Error(updateError.message)
+
+			setSelectedBook(null)
+			await loadMyLoans()
+		} catch (e) {
+			setError(e?.message || "Unable to return book")
+		} finally {
+			setLoading(false)
+		}
+	}
 
 	const authors = useMemo(() => {
 		const set = new Set()
@@ -217,7 +265,13 @@ function MyBooks() {
 						key={book.loanId ?? book.id ?? i}
 						onClick={() => setSelectedBook(book)}
 					>
-						<img src={book.image} />
+						<img
+							src={book.image || noCoverSvg}
+							alt={book.name}
+							onError={(e) => {
+								if (e.currentTarget.src !== noCoverSvg) e.currentTarget.src = noCoverSvg
+							}}
+						/>
 
 						<div className="book-info">
 							<h4>{book.name}</h4>
@@ -242,8 +296,9 @@ function MyBooks() {
 			<BookDetailsModal 
 				isOpen={!!selectedBook}
 				book={selectedBook}
-				role="user" // 👈 ADD THIS
+				role="user" 
 				onClose={() => setSelectedBook(null)}
+				onReturn={handleReturn}
 			/>
 
 		</div>
