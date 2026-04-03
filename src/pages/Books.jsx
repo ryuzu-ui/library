@@ -4,6 +4,7 @@ import BookDetailsModal from "./BookDetailsModal"
 import AddBookModal from "./AddBookModal"
 import EditBookModal from "./EditBookModal"
 import { supabase } from "../lib/supabaseClient"
+import toast from "react-hot-toast"
 
 function Books() {
 	const [searchParams] = useSearchParams()
@@ -546,8 +547,11 @@ function Books() {
 			setSelectedBook(null)
 			setBooks((prev) => prev.filter((b) => b.id !== book.id))
 			await loadBooks()
+			toast.success("Book deleted successfully")
 		} catch (e) {
-			setError(e?.message || "Unable to delete book")
+			const msg = e?.message || "Unable to delete book"
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}

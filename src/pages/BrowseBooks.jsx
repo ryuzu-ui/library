@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import BookDetailsModal from "./BookDetailsModal"
 import { supabase } from "../lib/supabaseClient"
+import toast from "react-hot-toast"
 
 function BrowseBooks() {
 	const [searchParams] = useSearchParams()
@@ -75,7 +76,9 @@ function BrowseBooks() {
 
 			setBooks(mapped)
 		} catch (e) {
-			setError(e?.message || "Unable to load books")
+			const msg = e?.message || "Unable to load books"
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}
@@ -85,7 +88,9 @@ function BrowseBooks() {
 		if (!book?.id) return
 		const bookId = Number(book.id)
 		if (!Number.isFinite(bookId)) {
-			setError("Invalid book id")
+			const msg = "Invalid book id"
+			setError(msg)
+			toast.error(msg)
 			return
 		}
 		setError("")
@@ -106,8 +111,11 @@ function BrowseBooks() {
 			if (!data || !data.length) throw new Error("No copies available")
 
 			setSelectedBook(null)
+			toast.success("Book borrowed")
 		} catch (e) {
-			setError(e?.message || "Unable to borrow book")
+			const msg = e?.message || "Unable to borrow book"
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}

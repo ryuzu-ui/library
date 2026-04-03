@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { supabase } from "../lib/supabaseClient"
+import toast from "react-hot-toast"
 
 function Profile() {
 	const [loading, setLoading] = useState(false)
@@ -47,7 +48,9 @@ function Profile() {
 				})
 			} catch (e) {
 				if (!active) return
-				setError(e?.message || "Unable to load profile")
+				const msg = e?.message || "Unable to load profile"
+				setError(msg)
+				toast.error(msg)
 			} finally {
 				if (active) setLoading(false)
 			}
@@ -103,8 +106,11 @@ function Profile() {
 
 			setProfile(saved || null)
 			setEditing(false)
+			toast.success("Profile saved")
 		} catch (e) {
-			setError(e?.message || "Unable to save profile")
+			const msg = e?.message || "Unable to save profile"
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setSaving(false)
 		}

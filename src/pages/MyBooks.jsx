@@ -2,6 +2,7 @@
 import { useSearchParams } from "react-router-dom"
 import BookDetailsModal from "./BookDetailsModal"
 import { supabase } from "../lib/supabaseClient"
+import toast from "react-hot-toast"
 
 function MyBooks() {
 
@@ -72,11 +73,13 @@ function MyBooks() {
 					"id, due_at, checked_out_at, returned_at, copy_id, book_copies:copy_id(id, book_id, books(id, title, publication_year, cover_url, book_authors(authors(name)), book_categories(categories(name))))"
 				)
 				.eq("user_id", user.id)
+				.is("returned_at", null)
 				.order("checked_out_at", { ascending: false })
 
 			if (loansError) throw new Error(loansError.message)
 
 			const mapped = (data || [])
+				.filter((loan) => !loan?.returned_at)
 				.map((loan) => {
 					const book = loan?.book_copies?.books
 					if (!book) return null
@@ -109,7 +112,9 @@ function MyBooks() {
 
 			setBooks(mapped)
 		} catch (e) {
-			setError(e?.message || "Unable to load your books")
+			const msg = e?.message || "Unable to load your books"
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}
@@ -131,18 +136,21 @@ function MyBooks() {
 			if (userError) throw new Error(userError.message)
 			if (!user) throw new Error("You must be logged in")
 
-			const { error: updateError } = await supabase
-				.from("loans")
-				.update({ returned_at: new Date().toISOString() })
-				.eq("id", book.loanId)
-				.eq("user_id", user.id)
-				.is("returned_at", null)
-			if (updateError) throw new Error(updateError.message)
+			const loanId = Number(book.loanId)
+			if (!Number.isFinite(loanId)) throw new Error("Invalid loan")
+			const { data, error: returnError } = await supabase.rpc("return_book", {
+				p_loan_id: loanId,
+			})
+			if (returnError) throw new Error(returnError.message)
+			if (!data || !data.length) throw new Error("Unable to return book")
 
 			setSelectedBook(null)
 			await loadMyLoans()
+			toast.success("Book returned")
 		} catch (e) {
-			setError(e?.message || "Unable to return book")
+			const msg = e?.message || "Unable to return book"
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}

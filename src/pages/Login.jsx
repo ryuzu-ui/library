@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import '../global.css'
 import { supabase } from "../lib/supabaseClient"
+import toast from "react-hot-toast"
 
 function Login() {
 	const [mode, setMode] = useState("login")
@@ -50,23 +51,31 @@ function Login() {
 
 		const trimmedEmail = email.trim()
 		if (!trimmedEmail || !password) {
-			setError("Please enter your email and password")
+			const msg = "Please enter your email and password"
+			setError(msg)
+			toast.error(msg)
 			return
 		}
 
 		if (mode === "signup") {
 			if (!fullName.trim()) {
-				setError("Please enter your full name")
+				const msg = "Please enter your full name"
+				setError(msg)
+				toast.error(msg)
 				return
 			}
 
 			if (password.length < 6) {
-				setError("Password must be at least 6 characters")
+				const msg = "Password must be at least 6 characters"
+				setError(msg)
+				toast.error(msg)
 				return
 			}
 
 			if (password !== confirmPassword) {
-				setError("Passwords do not match")
+				const msg = "Passwords do not match"
+				setError(msg)
+				toast.error(msg)
 				return
 			}
 		}
@@ -84,6 +93,7 @@ function Login() {
 				}
 
 				await resolveRoleAndRedirect()
+				toast.success("Logged in")
 				return
 			}
 
@@ -102,9 +112,10 @@ function Login() {
 			}
 
 			if (!data?.session) {
-				setMessage(
+				const msg =
 					"Account created. Please check your email to confirm your account, then log in."
-				)
+				setMessage(msg)
+				toast.success("Account created")
 				setMode("login")
 				setPassword("")
 				setConfirmPassword("")
@@ -112,8 +123,11 @@ function Login() {
 			}
 
 			await resolveRoleAndRedirect()
+			toast.success("Account created")
 		} catch (e) {
-			setError(e?.message || "Something went wrong")
+			const msg = e?.message || "Something went wrong"
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}
@@ -124,7 +138,9 @@ function Login() {
 		setMessage("")
 		const trimmedEmail = email.trim()
 		if (!trimmedEmail) {
-			setError("Enter your email first")
+			const msg = "Enter your email first"
+			setError(msg)
+			toast.error(msg)
 			return
 		}
 
@@ -136,9 +152,13 @@ function Login() {
 			if (resetError) {
 				throw new Error(resetError.message)
 			}
-			setMessage("Password reset email sent. Please check your inbox.")
+			const msg = "Password reset email sent. Please check your inbox."
+			setMessage(msg)
+			toast.success("Reset email sent")
 		} catch (e) {
-			setError(e?.message || "Unable to send reset email")
+			const msg = e?.message || "Unable to send reset email"
+			setError(msg)
+			toast.error(msg)
 		} finally {
 			setLoading(false)
 		}
