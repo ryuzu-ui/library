@@ -25,8 +25,31 @@ function Books() {
 	const [categories, setCategories] = useState([])
 
 
-	const placeholderCover =
-		"https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=600&q=60"
+	const noCoverSvg =
+		"data:image/svg+xml;charset=UTF-8," +
+		encodeURIComponent(
+			`<svg xmlns='http://www.w3.org/2000/svg' width='600' height='900' viewBox='0 0 600 900'>
+				<defs>
+					<linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
+						<stop offset='0' stop-color='#f3f5f7'/>
+						<stop offset='1' stop-color='#e7eaee'/>
+					</linearGradient>
+				</defs>
+				<rect width='600' height='900' rx='28' fill='url(#g)'/>
+				<rect x='55' y='70' width='490' height='760' rx='22' fill='rgba(0,0,0,0.03)' stroke='rgba(0,0,0,0.08)' stroke-width='4'/>
+				<path d='M210 390c0-49 40-89 90-89s90 40 90 89-40 89-90 89-90-40-90-89z' fill='rgba(46,125,50,0.12)'/>
+				<path d='M245 390c0-30 25-55 55-55s55 25 55 55-25 55-55 55-55-25-55-55z' fill='rgba(46,125,50,0.20)'/>
+				<text x='300' y='560' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='28' font-weight='800' fill='rgba(0,0,0,0.60)'>No cover set</text>
+				<text x='300' y='606' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='16' font-weight='600' fill='rgba(0,0,0,0.40)'>Upload a cover or paste an image URL</text>
+			</svg>`
+		)
+
+	const withCacheBuster = (url) => {
+		const raw = String(url || "").trim()
+		if (!raw) return ""
+		const sep = raw.includes("?") ? "&" : "?"
+		return `${raw}${sep}t=${Date.now()}`
+	}
 
 	const loadBooks = async () => {
 
@@ -57,7 +80,7 @@ function Books() {
 					name: b.title,
 					author,
 					date,
-					image: b.cover_url || placeholderCover,
+					image: b.cover_url || "",
 					publicationYear: b.publication_year ?? null,
 					coverUrl: b.cover_url ?? "",
 					categories: categoryNames,
@@ -206,6 +229,7 @@ function Books() {
 				if (linkError) throw new Error(linkError.message)
 			}
 
+			let finalCoverUrl = coverUrlForDb || ""
 			if (!coverUrlForDb && coverFile) {
 
 				const fileExt = (coverFile.name || "").split(".").pop() || "png"
@@ -237,12 +261,16 @@ function Books() {
 					throw new Error("Cover upload succeeded, but URL generation failed")
 				}
 
+				const bustedUrl = withCacheBuster(publicUrl)
 				const { error: updateCoverError } = await supabase
 					.from("books")
-					.update({ cover_url: publicUrl })
+					.update({ cover_url: bustedUrl })
 					.eq("id", upsertedBook.id)
 
 				if (updateCoverError) throw new Error(updateCoverError.message)
+				finalCoverUrl = bustedUrl
+			} else {
+				finalCoverUrl = coverUrlForDb
 			}
 
 			const categoryNames = Array.from(
@@ -272,6 +300,19 @@ function Books() {
 				}
 			}
 
+			if (finalCoverUrl) {
+				setBooks((prev) =>
+					prev.map((b) =>
+						b.id === upsertedBook.id
+							? {
+								...b,
+								image: finalCoverUrl,
+								coverUrl: finalCoverUrl,
+							}
+							: b
+					)
+				)
+			}
 			await loadBooks()
 			return { success: true }
 		} catch (e) {
@@ -351,9 +392,12 @@ function Books() {
 				if (linkError) throw new Error(linkError.message)
 			}
 
-			if (!coverUrlForDb && coverFile) {
+			let finalCoverUrl = coverUrlForDb
+			if (coverFile) {
 
-				const fileExt = (coverFile.name || "").split(".").pop() || "png"
+				const fileExtFromName = (coverFile.name || "").split(".").pop() || ""
+				const fileExtFromType = (coverFile.type || "").split("/").pop() || ""
+				const fileExt = (fileExtFromName || fileExtFromType || "png").toLowerCase()
 				const fileId =
 					typeof crypto !== "undefined" && crypto.randomUUID
 						? crypto.randomUUID()
@@ -382,12 +426,16 @@ function Books() {
 					throw new Error("Cover upload succeeded, but URL generation failed")
 				}
 
+				const bustedUrl = withCacheBuster(publicUrl)
 				const { error: updateCoverError } = await supabase
 					.from("books")
-					.update({ cover_url: publicUrl })
+					.update({ cover_url: bustedUrl })
 					.eq("id", updatedBook.id)
 
 				if (updateCoverError) throw new Error(updateCoverError.message)
+				finalCoverUrl = bustedUrl
+			} else {
+				finalCoverUrl = coverUrlForDb
 			}
 
 			const categoryNames = Array.from(
@@ -417,11 +465,70 @@ function Books() {
 				}
 			}
 
+			if (finalCoverUrl) {
+				setBooks((prev) =>
+					prev.map((b) =>
+						b.id === updatedBook.id
+							? {
+								...b,
+								image: finalCoverUrl,
+								coverUrl: finalCoverUrl,
+							}
+							: b
+					)
+				)
+			}
 			await loadBooks()
 			return { success: true }
 		} catch (e) {
 			setError(e?.message || "Unable to save book")
 			return { success: false, message: e?.message || "Unable to save book" }
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const handleDeleteBook = async (book) => {
+		if (!book?.id) return
+		const ok = window.confirm(`Delete "${book.name || "this book"}"? This cannot be undone.`)
+		if (!ok) return
+
+		setError("")
+		setLoading(true)
+		try {
+			const { data: copies, error: copiesError } = await supabase
+				.from("copies")
+				.select("id")
+				.eq("book_id", book.id)
+			if (copiesError) throw new Error(copiesError.message)
+
+			const copyIds = (copies || []).map((c) => c.id).filter(Boolean)
+			if (copyIds.length) {
+				const { count: loanCount, error: loanError } = await supabase
+					.from("loans")
+					.select("id", { count: "exact", head: true })
+					.in("copy_id", copyIds)
+				if (loanError) throw new Error(loanError.message)
+				if ((loanCount || 0) > 0) {
+					throw new Error("Cannot delete: this book has loan history. Remove related loans/copies first.")
+				}
+			}
+
+			await supabase.from("book_categories").delete().eq("book_id", book.id)
+			await supabase.from("book_authors").delete().eq("book_id", book.id)
+			await supabase.from("copies").delete().eq("book_id", book.id)
+
+			const { error: deleteError } = await supabase
+				.from("books")
+				.delete()
+				.eq("id", book.id)
+			if (deleteError) throw new Error(deleteError.message)
+
+			setSelectedBook(null)
+			setBooks((prev) => prev.filter((b) => b.id !== book.id))
+			await loadBooks()
+		} catch (e) {
+			setError(e?.message || "Unable to delete book")
 		} finally {
 			setLoading(false)
 		}
@@ -521,7 +628,14 @@ function Books() {
 						key={book.id ?? i}
 						onClick={() => setSelectedBook(book)}
 					>
-						<img src={book.image} alt={book.name} />
+						<img
+							src={book.image || noCoverSvg}
+							alt={book.name}
+							onError={(e) => {
+								if (e.currentTarget.src !== noCoverSvg) e.currentTarget.src = noCoverSvg
+							}}
+						/>
+
 						<div className="book-info">
 							<h4>{book.name}</h4>
 							<p>{book.author}</p>
@@ -546,6 +660,7 @@ function Books() {
 				role="admin"
 				onClose={() => setSelectedBook(null)}
 				onEdit={handleEditOpen}
+				onDelete={handleDeleteBook}
 			/>
 
 			<AddBookModal

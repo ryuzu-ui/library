@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom"
 import { useEffect, useState } from "react"
 
 function EditBookModal({ isOpen, onClose, book, onSave, categories = [] }) {
@@ -30,6 +31,14 @@ function EditBookModal({ isOpen, onClose, book, onSave, categories = [] }) {
 		}
 	}, [book])
 
+	useEffect(() => {
+		if (!isOpen) return
+		document.body.classList.add("modal-open")
+		return () => {
+			document.body.classList.remove("modal-open")
+		}
+	}, [isOpen])
+
 	const categoryOptions = (categories || []).filter(Boolean)
 
 	if (!isOpen || !book) return null
@@ -48,6 +57,7 @@ function EditBookModal({ isOpen, onClose, book, onSave, categories = [] }) {
 		setForm((prev) => ({
 			...prev,
 			coverFile: file || null,
+			image: file ? "" : prev.image,
 		}))
 	}
 
@@ -101,7 +111,7 @@ function EditBookModal({ isOpen, onClose, book, onSave, categories = [] }) {
 		}
 	}
 
-	return (
+	return createPortal(
 		<div className="modal-overlay" onClick={onClose}>
 			<div className="modal book-modal" onClick={(e) => e.stopPropagation()}>
 
@@ -198,7 +208,8 @@ function EditBookModal({ isOpen, onClose, book, onSave, categories = [] }) {
 				</div>
 
 			</div>
-		</div>
+		</div>,
+		document.body
 	)
 }
 
