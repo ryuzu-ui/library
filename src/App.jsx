@@ -13,6 +13,8 @@ import MyBooks from "./pages/MyBooks"
 import Home from "./pages/Home"
 import BrowseBooks from "./pages/BrowseBooks"
 
+import Bookmarks from "./pages/Bookmarks" // adjust path kung needed
+
 function App() {
 	return (
 		<BrowserRouter>
@@ -90,6 +92,15 @@ function App() {
 					element={
 						<UserLayout>
 							<BrowseBooks />
+						</UserLayout>
+					}
+				/>
+
+				<Route 
+					path="/bookmarks" 
+					element={
+						<UserLayout>
+							<Bookmarks />
 						</UserLayout>
 					}
 				/>

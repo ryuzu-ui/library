@@ -1682,3 +1682,15 @@ body.modal-open {
 .topbar .profile-card-actions .btn { width: 100%; }
 
 .app.modal-open .main { transform: none !important; }
+
+.book-card {
+	position: relative;
+}
+
+.bookmark-icon {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	font-size: 20px;
+	cursor: pointer;
+}

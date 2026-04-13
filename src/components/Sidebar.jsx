@@ -18,6 +18,7 @@ function Sidebar({ isOpen, role, toggleSidebar, onNavigate }) {
 		{ name: "Dashboard", path: "/user/dashboard" },
 		{ name: "Browse Books", path: "/user/browse" },
 		{ name: "My Books", path: "/my-books" },
+		{ name: "Bookmarks", path: "/bookmarks" },
 	]
 
 	const menu = role === "admin" ? adminMenu : userMenu

@@ -11,6 +11,10 @@ function BrowseBooks() {
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState("")
 
+	const [bookmarks, setBookmarks] = useState([])
+
+	
+
 	useEffect(() => {
 		const q = searchParams.get("q") || ""
 		setSearchTerm(q)
@@ -39,6 +43,29 @@ function BrowseBooks() {
 				<text x='300' y='606' text-anchor='middle' font-family='Inter, Arial, sans-serif' font-size='16' font-weight='600' fill='rgba(0,0,0,0.40)'>Upload a cover or paste an image URL</text>
 			</svg>`
 		)
+
+	// load bookmarks
+	useEffect(() => {
+		const saved = JSON.parse(localStorage.getItem("bookmarks") || "[]")
+		setBookmarks(saved)
+	}, [])
+
+	// save bookmarks
+	useEffect(() => {
+		localStorage.setItem("bookmarks", JSON.stringify(bookmarks))
+	}, [bookmarks])
+
+	// toggle bookmark
+	const toggleBookmark = (book) => {
+		setBookmarks((prev) => {
+			const exists = prev.find((b) => b.id === book.id)
+			if (exists) {
+				return prev.filter((b) => b.id !== book.id)
+			} else {
+				return [...prev, book]
+			}
+		})
+	}
 
 	const loadBooks = async () => {
 		setError("")
@@ -256,6 +283,17 @@ function BrowseBooks() {
 						key={book.id ?? i}
 						onClick={() => setSelectedBook(book)}
 					>
+
+						<div
+							className="bookmark-icon"
+							onClick={(e) => {
+								e.stopPropagation()
+								toggleBookmark(book)
+							}}
+						>
+							{bookmarks.some((b) => b.id === book.id) ? "💚" : "🤍"}
+						</div>
+						
 						<img
 						src={book.image || noCoverSvg}
 						alt={book.name}
