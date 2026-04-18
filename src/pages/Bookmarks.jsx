@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
+
 
 function Bookmarks() {
-	const [bookmarks, setBookmarks] = useState([])
-
-	useEffect(() => {
-		const saved = JSON.parse(localStorage.getItem("bookmarks") || "[]")
-		setBookmarks(saved)
-	}, [])
+	const [bookmarks, setBookmarks] = useState(() => {
+		try {
+			return JSON.parse(localStorage.getItem("bookmarks") || "[]")
+		} catch {
+			return []
+		}
+	})
 
 	return (
 		<div className="page">

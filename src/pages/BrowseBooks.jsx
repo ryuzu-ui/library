@@ -11,7 +11,13 @@ function BrowseBooks() {
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState("")
 
-	const [bookmarks, setBookmarks] = useState([])
+	const [bookmarks, setBookmarks] = useState(() => {
+		try {
+			return JSON.parse(localStorage.getItem("bookmarks") || "[]")
+		} catch {
+			return []
+		}
+	})
 
 	
 
@@ -44,13 +50,7 @@ function BrowseBooks() {
 			</svg>`
 		)
 
-	// load bookmarks
-	useEffect(() => {
-		const saved = JSON.parse(localStorage.getItem("bookmarks") || "[]")
-		setBookmarks(saved)
-	}, [])
-
-	// save bookmarks
+	// save bookmarks whenever they change
 	useEffect(() => {
 		localStorage.setItem("bookmarks", JSON.stringify(bookmarks))
 	}, [bookmarks])
